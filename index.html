@@ -1,0 +1,3562 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Taskly — Smart Tasks & Recipe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f6fb;
+  --paper:#ffffff;
+  --paper-card:#fafaff;
+  --ink:#13141f;
+  --muted:#86899a;
+  --line:#e8eaf1;
+  --purple:#6454ee;
+  --purple-hover:#5241dd;
+  --purple-light:#efedff;
+  --purple-glow:rgba(100,84,238,0.2);
+  --green:#1ea566;
+  --green-light:#e6f8f0;
+  --red:#e24b5e;
+  --red-light:#fff0f2;
+  --amber:#f59e0b;
+  --amber-light:#fef3c7;
+  --orange:#ff7300;
+  --orange-hover:#ea6500;
+  --orange-light:#fff2e7;
+  --orange-glow:rgba(255,115,0,0.22);
+  --shadow:0 12px 35px rgba(19,20,31,0.06);
+  --input-bg:#fbfbfe;
+}
+
+body.dark{
+  --bg:#0c0e15;
+  --paper:#141622;
+  --paper-card:#1a1c2b;
+  --ink:#f2f4fa;
+  --muted:#8b8fa5;
+  --line:#23263a;
+  --purple:#796bf8;
+  --purple-hover:#8d81fc;
+  --purple-light:#242247;
+  --purple-glow:rgba(121,107,248,0.3);
+  --green:#2bc479;
+  --green-light:#133525;
+  --red:#f85d71;
+  --red-light:#3b171f;
+  --amber:#fbbf24;
+  --amber-light:#382d12;
+  --orange:#ff8824;
+  --orange-hover:#ff7808;
+  --orange-light:#382110;
+  --orange-glow:rgba(255,136,36,0.3);
+  --shadow:0 14px 45px rgba(0,0,0,0.55);
+  --input-bg:#10111c;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{
+  margin:0;
+  padding:0;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+  font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink);
+  background:var(--bg);
+  transition:background .2s,color .2s;
+  user-select:none;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+input,textarea{user-select:auto}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+
+/* 100% FULL SCREEN APP LAYOUT */
+.app{
+  width:100vw;
+  height:100vh;
+  display:grid;
+  grid-template-columns:260px 1fr;
+  background:var(--paper);
+  border:0;
+  overflow:hidden;
+}
+
+/* DESKTOP SIDEBAR */
+aside{
+  background:var(--paper-card);
+  border-right:1px solid var(--line);
+  padding:24px 18px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  height:100vh;
+  overflow-y:auto;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font:800 22px Manrope,sans-serif;
+  letter-spacing:-.7px;
+  margin:2px 8px 24px;
+}
+.brand-icon{
+  width:36px;
+  height:36px;
+  border-radius:11px;
+  background:linear-gradient(135deg,#7565f4,#9b8cff);
+  display:grid;
+  place-items:center;
+  color:white;
+  font-size:19px;
+  box-shadow:0 4px 14px rgba(117,101,244,0.38);
+}
+
+.section-label{
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:1.5px;
+  color:var(--muted);
+  margin:16px 10px 8px;
+  text-transform:uppercase;
+}
+
+.nav{
+  width:100%;
+  display:flex;
+  gap:11px;
+  align-items:center;
+  padding:11px 13px;
+  border:0;
+  background:transparent;
+  border-radius:12px;
+  text-align:left;
+  color:var(--muted);
+  font-weight:600;
+  font-size:13px;
+  transition:all .15s;
+}
+.nav:hover{background:var(--purple-light);color:var(--purple)}
+.nav.active{background:var(--purple-light);color:var(--purple);font-weight:700}
+.nav.recipe-nav{color:var(--orange)}
+.nav.recipe-nav:hover{background:var(--orange-light);color:var(--orange)}
+.nav.recipe-nav.active{background:var(--orange-light);color:var(--orange);font-weight:700}
+.nav-icon{font-size:16px;width:20px;text-align:center;display:inline-flex;align-items:center;justify-content:center}
+.nav-badge{margin-left:auto;font-size:10.5px;padding:2px 7px;border-radius:10px;background:var(--line);color:var(--muted)}
+.nav.active .nav-badge{background:var(--purple);color:white}
+.nav.recipe-nav.active .nav-badge{background:var(--orange);color:white}
+
+.side-spacer{flex:1}
+
+.theme-toggle{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 12px;
+  border-radius:12px;
+  background:var(--bg);
+  border:1px solid var(--line);
+  color:var(--ink);
+  font-size:12px;
+  font-weight:600;
+  margin-bottom:8px;
+  transition:all .15s;
+}
+.theme-toggle:hover{background:var(--purple-light);color:var(--purple)}
+
+.account{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border-top:1px solid var(--line);
+  padding:14px 6px 0;
+}
+.avatar{
+  width:36px;
+  height:36px;
+  border-radius:12px;
+  background:var(--purple-light);
+  color:var(--purple);
+  display:grid;
+  place-items:center;
+  font-weight:800;
+  flex-shrink:0;
+  border:0;
+}
+.account-info{min-width:0;flex:1}
+.account-info strong{
+  display:block;
+  font-size:11.5px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:var(--ink);
+}
+.account-info small{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  font-size:10px;
+  color:var(--green);
+  font-weight:600;
+}
+.account-info small::before{
+  content:'';
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:var(--green);
+  display:inline-block;
+}
+
+.account-actions{display:flex;gap:4px}
+.logout{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  padding:7px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+}
+.logout:hover{background:var(--red-light);color:var(--red)}
+
+/* MOBILE TOP APP BAR (VISIBLE ONLY ON MOBILE) */
+.mobile-app-bar{
+  display:none;
+}
+
+/* MAIN VIEWPORT */
+main{
+  height:100vh;
+  overflow-y:auto;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+}
+
+.main-content-scroll{
+  padding:34px 50px;
+  flex:1;
+  overflow-y:auto;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:15px;
+}
+.date-label{font-size:10.5px;color:var(--muted);font-weight:700;letter-spacing:1px}
+.header h1{
+  font:800 30px Manrope,sans-serif;
+  letter-spacing:-1.1px;
+  margin:7px 0 4px;
+  color:var(--ink);
+  overflow-wrap:anywhere;
+}
+.subtitle{margin:0;color:var(--muted);font-size:13px;line-height:1.4}
+.header-pills{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.focus-pill{
+  white-space:nowrap;
+  padding:8px 12px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:700;
+  background:var(--paper-card);
+}
+.sync-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:7px 11px;
+  border-radius:11px;
+  background:var(--green-light);
+  color:var(--green);
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.progress{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  background:linear-gradient(115deg,#6454ee,#8c7df9);
+  border-radius:18px;
+  color:white;
+  padding:20px 26px;
+  margin:24px 0 22px;
+  box-shadow:0 10px 25px var(--purple-glow);
+}
+.progress-content{flex:1;min-width:0}
+.progress-title{font:700 15px Manrope,sans-serif}
+.progress-desc{font-size:12px;color:#e8e4ff;margin-top:4px;line-height:1.4;overflow-wrap:anywhere}
+.track{height:6px;background:rgba(255,255,255,0.3);border-radius:8px;margin-top:12px;overflow:hidden}
+.fill{height:100%;width:0;background:white;border-radius:8px;transition:width .3s ease}
+.percent{font:800 26px Manrope,sans-serif;letter-spacing:-.5px;flex-shrink:0}
+
+.search-row{
+  display:flex;
+  gap:10px;
+  margin-bottom:14px;
+}
+.search{
+  height:48px;
+  flex:1;
+  min-width:0;
+  border:1.5px solid var(--line);
+  border-radius:13px;
+  padding:0 16px;
+  background:var(--input-bg);
+  color:var(--ink);
+  outline:none;
+  font-size:13px;
+  transition:border-color .15s,box-shadow .15s;
+}
+.search:focus,.task-entry:focus,.input-field:focus{
+  border-color:var(--purple);
+  box-shadow:0 0 0 3px var(--purple-glow);
+}
+
+.action-buttons{display:flex;gap:8px}
+
+.primary{
+  border:0;
+  border-radius:13px;
+  background:var(--purple);
+  color:#fff;
+  font-size:13px;
+  font-weight:700;
+  padding:0 18px;
+  height:48px;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  box-shadow:0 6px 16px var(--purple-glow);
+  transition:all .15s;
+  white-space:nowrap;
+}
+.primary:hover{background:var(--purple-hover);transform:translateY(-1px)}
+.primary:active{transform:scale(0.98)}
+
+.recipe-btn{
+  border:0;
+  border-radius:13px;
+  background:linear-gradient(135deg,#ff8008,#ff5e00);
+  color:#fff;
+  font-size:13px;
+  font-weight:700;
+  padding:0 18px;
+  height:48px;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  box-shadow:0 6px 16px var(--orange-glow);
+  transition:all .15s;
+  white-space:nowrap;
+}
+.recipe-btn:hover{opacity:0.95;transform:translateY(-1px)}
+.recipe-btn:active{transform:scale(0.98)}
+
+.add-card{
+  background:var(--paper-card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:22px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.03);
+  animation:slideDown .18s ease;
+}
+.add-card[hidden]{display:none}
+
+.add-main-row{display:flex;gap:10px}
+.task-entry{
+  height:44px;
+  flex:1;
+  min-width:0;
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:0 14px;
+  outline:none;
+  font-size:13px;
+  background:var(--paper);
+  color:var(--ink);
+}
+
+.add-meta-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+}
+.input-select{
+  height:36px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  padding:0 10px;
+  font-size:12px;
+  background:var(--paper);
+  color:var(--ink);
+  outline:none;
+}
+.input-label-group{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:11.5px;
+  color:var(--muted);
+  font-weight:600;
+}
+.add-actions{
+  margin-left:auto;
+  display:flex;
+  gap:8px;
+}
+.cancel-add{
+  height:36px;
+  padding:0 12px;
+  border-radius:9px;
+  border:1px solid var(--line);
+  background:transparent;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:600;
+}
+.cancel-add:hover{background:var(--line);color:var(--ink)}
+.save-btn{
+  height:36px;
+  padding:0 16px;
+  border-radius:9px;
+  font-size:12px;
+}
+
+.list-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin:14px 0 16px;
+}
+.list-head-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.list-head h2{
+  font:800 16.5px Manrope,sans-serif;
+  margin:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:var(--ink);
+}
+.count{font:600 12px 'DM Sans';color:var(--muted)}
+.list-right-tools{display:flex;align-items:center;gap:8px}
+
+.filters{
+  display:flex;
+  gap:3px;
+  background:var(--paper-card);
+  padding:4px;
+  border-radius:11px;
+  border:1px solid var(--line);
+}
+.filter{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:700;
+  padding:6px 12px;
+  border-radius:8px;
+  transition:all .15s;
+}
+.filter:hover{color:var(--ink)}
+.filter.active{
+  background:var(--paper);
+  color:var(--purple);
+  box-shadow:0 2px 7px rgba(0,0,0,0.06);
+}
+
+.clear-done-btn{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:600;
+  padding:6px 11px;
+  border-radius:8px;
+}
+.clear-done-btn:hover{background:var(--red-light);color:var(--red)}
+
+.task-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+/* NORMAL TASK */
+.task{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  border:1.5px solid var(--line);
+  background:var(--paper);
+  border-radius:14px;
+  padding:14px 16px;
+  min-width:0;
+  transition:transform .25s ease,opacity .3s ease,filter .3s ease,background .2s,border-color .2s;
+}
+.task:hover{
+  border-color:rgba(100,84,238,0.35);
+  box-shadow:0 4px 14px rgba(19,20,31,0.04);
+}
+
+/* TICKED ITEM GOES TO BOTTOM & BECOMES DHUNDLA */
+.task.done{
+  opacity: 0.42;
+  filter: blur(0.35px) grayscale(35%);
+  background: var(--paper-card);
+  border-color: var(--line);
+  transform: scale(0.995);
+}
+.task.done:hover{
+  opacity: 0.82;
+  filter: none;
+}
+.task.done .task-title{
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.check{
+  width:22px;
+  height:22px;
+  border:1.8px solid #c8cbda;
+  border-radius:7px;
+  background:transparent;
+  color:white;
+  display:grid;
+  place-items:center;
+  flex-shrink:0;
+  padding:0;
+  font-size:12px;
+  font-weight:800;
+  transition:all .15s;
+}
+.task.done .check{
+  background:var(--green);
+  border-color:var(--green);
+}
+
+.task-body{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.task-title{
+  font-size:13px;
+  font-weight:500;
+  color:var(--ink);
+  overflow-wrap:anywhere;
+  line-height:1.45;
+}
+.task-pills{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  align-items:center;
+}
+.tag{
+  font-size:10px;
+  font-weight:700;
+  padding:2px 8px;
+  border-radius:6px;
+  text-transform:uppercase;
+  letter-spacing:0.4px;
+}
+.tag-high{background:var(--red-light);color:var(--red)}
+.tag-medium{background:var(--amber-light);color:var(--amber)}
+.tag-low{background:var(--green-light);color:var(--green)}
+
+.meta{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:3px;
+  margin-left:auto;
+  flex-shrink:0;
+}
+.meta span{font-size:10px;color:var(--muted);white-space:nowrap}
+.meta .completed{color:var(--green);font-weight:600}
+
+.task-actions{display:flex;gap:3px;align-items:center;flex-shrink:0}
+.icon-btn{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  padding:6px;
+  border-radius:8px;
+  font-size:15px;
+  display:grid;
+  place-items:center;
+  transition:all .15s;
+}
+.icon-btn:hover{background:var(--line);color:var(--ink)}
+.icon-btn.pinned{color:#f59e0b}
+.icon-btn.edit:hover{background:var(--purple-light);color:var(--purple)}
+.icon-btn.delete:hover{background:var(--red-light);color:var(--red)}
+
+/* SPECIAL RECIPE CARD (COLLAPSIBLE ACCORDION CHECKLIST) */
+.recipe-card{
+  border:1.5px solid rgba(255,115,0,0.32);
+  background:var(--paper);
+  border-radius:18px;
+  padding:16px 18px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  box-shadow:0 4px 18px rgba(255,115,0,0.06);
+  transition:all .25s ease;
+  min-width:0;
+}
+.recipe-card.done{
+  opacity:0.44;
+  filter:blur(0.3px) grayscale(35%);
+  border-color:var(--line);
+}
+.recipe-card-header{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  cursor:pointer;
+  min-width:0;
+}
+.recipe-dish-icon{
+  font-size:26px;
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  background:var(--orange-light);
+  display:grid;
+  place-items:center;
+  flex-shrink:0;
+  box-shadow:0 3px 10px rgba(255,115,0,0.15);
+}
+.recipe-card-info{flex:1;min-width:0}
+.recipe-card-title{
+  font:700 14.5px Manrope,sans-serif;
+  color:var(--ink);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  overflow-wrap:anywhere;
+  line-height:1.35;
+}
+.recipe-progress-badge{
+  font-size:10.5px;
+  font-weight:700;
+  padding:2px 8px;
+  border-radius:10px;
+  background:var(--orange-light);
+  color:var(--orange);
+  white-space:nowrap;
+  display:inline-block;
+}
+.recipe-progress-badge.all-done{
+  background:var(--green-light);
+  color:var(--green);
+}
+.recipe-card-sub{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:3px;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+.recipe-header-controls{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-shrink:0;
+}
+.recipe-expand-btn{
+  border:1.5px solid var(--line);
+  background:var(--paper-card);
+  color:var(--ink);
+  font-size:12px;
+  font-weight:700;
+  padding:7px 13px;
+  border-radius:10px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  transition:all .15s;
+  white-space:nowrap;
+}
+.recipe-expand-btn:hover{
+  background:var(--orange-light);
+  border-color:var(--orange);
+  color:var(--orange);
+}
+
+/* INNER INGREDIENTS CHECKLIST (INSIDE RECIPE CARD) */
+.recipe-inner-checklist{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  padding:14px;
+  background:var(--paper-card);
+  border-radius:14px;
+  border:1px solid var(--line);
+  animation:slideDown .2s ease;
+}
+.recipe-inner-item{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:10px 12px;
+  border-radius:10px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  font-size:13px;
+  cursor:pointer;
+  transition:all .25s ease;
+  overflow-wrap:anywhere;
+  line-height:1.4;
+}
+.recipe-inner-item:hover{
+  border-color:rgba(255,115,0,0.4);
+}
+/* TICKED INGREDIENT: DHUNDLA & MOVES TO BOTTOM */
+.recipe-inner-item.done{
+  opacity:0.42;
+  filter:blur(0.3px) grayscale(35%);
+  text-decoration:line-through;
+  color:var(--muted);
+  background:var(--paper-card);
+}
+.recipe-inner-check{
+  width:19px;
+  height:19px;
+  accent-color:var(--orange);
+  cursor:pointer;
+  flex-shrink:0;
+}
+
+/* 100% FULL SCREEN RECIPE STUDIO PAGE */
+.recipe-studio-view{
+  position:absolute;
+  inset:0;
+  background:var(--paper);
+  z-index:30;
+  overflow-y:auto;
+  padding:34px 50px;
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+  animation:fadeIn .2s ease;
+}
+
+.studio-top-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid var(--line);
+  padding-bottom:16px;
+  gap:10px;
+}
+.back-btn{
+  border:1.5px solid var(--line);
+  background:var(--paper-card);
+  color:var(--ink);
+  font-size:13px;
+  font-weight:700;
+  padding:9px 18px;
+  border-radius:12px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  transition:all .15s;
+  white-space:nowrap;
+}
+.back-btn:hover{
+  background:var(--purple-light);
+  border-color:var(--purple);
+  color:var(--purple);
+}
+.back-hint-badge{
+  font-size:11px;
+  color:var(--muted);
+  background:var(--line);
+  padding:3px 8px;
+  border-radius:6px;
+  margin-left:4px;
+}
+
+.ai-live-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 12px;
+  border-radius:20px;
+  background:linear-gradient(135deg,rgba(100,84,238,0.12),rgba(255,115,0,0.12));
+  border:1px solid rgba(100,84,238,0.3);
+  font-size:11.5px;
+  font-weight:700;
+  color:var(--purple);
+  white-space:nowrap;
+}
+.ai-pulse-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 8px var(--green);
+  animation:pulse 1.8s infinite;
+}
+
+.studio-header h2{
+  font:800 28px Manrope,sans-serif;
+  margin:0 0 6px;
+  letter-spacing:-.8px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  line-height:1.3;
+}
+.studio-header p{
+  margin:0;
+  color:var(--muted);
+  font-size:13.5px;
+  line-height:1.5;
+}
+
+.ai-search-card{
+  background:linear-gradient(135deg,rgba(255,115,0,0.07),rgba(100,84,238,0.06));
+  border:1.5px solid rgba(255,115,0,0.3);
+  border-radius:22px;
+  padding:24px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  box-shadow:0 8px 30px rgba(255,115,0,0.06);
+}
+.ai-search-label{
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:var(--orange);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.ai-input-wrap{
+  display:flex;
+  gap:10px;
+}
+.ai-input{
+  height:54px;
+  flex:1;
+  border:1.8px solid var(--line);
+  border-radius:14px;
+  padding:0 20px;
+  font-size:15px;
+  font-weight:500;
+  background:var(--paper);
+  color:var(--ink);
+  outline:none;
+  box-shadow:0 4px 14px rgba(0,0,0,0.03);
+  transition:all .15s;
+}
+.ai-input:focus{
+  border-color:var(--orange);
+  box-shadow:0 0 0 4px var(--orange-glow);
+}
+.ai-btn{
+  height:54px;
+  border:0;
+  background:linear-gradient(135deg,#ff8008,#ff5e00);
+  color:white;
+  font-weight:700;
+  font-size:14px;
+  padding:0 24px;
+  border-radius:14px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  box-shadow:0 8px 20px var(--orange-glow);
+  transition:all .15s;
+  white-space:nowrap;
+}
+.ai-btn:hover{opacity:0.94;transform:translateY(-1px)}
+
+.ai-spell-hint{
+  font-size:12.5px;
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  line-height:1.4;
+}
+.ai-spell-hint strong{color:var(--orange)}
+
+/* AI INGREDIENT RESULTS CARD */
+.ai-result-panel{
+  background:var(--paper);
+  border:1.5px solid var(--line);
+  border-radius:22px;
+  padding:24px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  box-shadow:var(--shadow);
+}
+.ai-matched-banner{
+  background:var(--orange-light);
+  border-left:4px solid var(--orange);
+  padding:14px 18px;
+  border-radius:12px;
+  font-size:13.5px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.ai-matched-banner strong{color:var(--orange)}
+
+/* ADD EXTRA CUSTOM INGREDIENT IN STUDIO */
+.add-custom-ing-row{
+  display:flex;
+  gap:10px;
+}
+.add-custom-ing-input{
+  height:44px;
+  flex:1;
+  border:1.5px solid var(--line);
+  border-radius:11px;
+  padding:0 14px;
+  font-size:13px;
+  background:var(--input-bg);
+  color:var(--ink);
+  outline:none;
+}
+.add-custom-ing-input:focus{border-color:var(--orange)}
+.add-custom-ing-btn{
+  height:44px;
+  padding:0 18px;
+  border:1px solid var(--line);
+  background:var(--paper-card);
+  color:var(--ink);
+  font-size:13px;
+  font-weight:700;
+  border-radius:11px;
+  white-space:nowrap;
+}
+.add-custom-ing-btn:hover{background:var(--orange-light);color:var(--orange)}
+
+.studio-ingredients-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+  gap:10px;
+  max-height:420px;
+  overflow-y:auto;
+  padding:4px;
+}
+.studio-ingredient-item{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:var(--paper-card);
+  font-size:13px;
+  cursor:pointer;
+  transition:all .15s;
+  overflow-wrap:anywhere;
+  line-height:1.35;
+}
+.studio-ingredient-item:hover{
+  border-color:var(--orange);
+  background:var(--paper);
+}
+.studio-ingredient-item input{
+  width:18px;
+  height:18px;
+  accent-color:var(--orange);
+  flex-shrink:0;
+}
+
+.studio-footer-actions{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding-top:16px;
+  border-top:1px solid var(--line);
+  gap:12px;
+}
+.studio-add-tasks-btn{
+  height:48px;
+  border:0;
+  background:linear-gradient(135deg,#ff8008,#ff5e00);
+  color:white;
+  font-weight:700;
+  font-size:14px;
+  padding:0 24px;
+  border-radius:13px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  box-shadow:0 6px 18px var(--orange-glow);
+  transition:all .15s;
+  white-space:nowrap;
+}
+.studio-add-tasks-btn:hover{opacity:0.93;transform:translateY(-1px)}
+
+.empty{text-align:center;padding:50px 15px;color:var(--muted);font-size:13px}
+.empty-icon{font-size:36px;margin-bottom:10px}
+
+.hint{
+  text-align:center;
+  color:var(--muted);
+  font-size:11.5px;
+  margin-top:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+
+/* LOGIN SCREEN (FULL SCREEN) */
+.login{
+  position:fixed;
+  inset:0;
+  z-index:50;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:radial-gradient(circle at 15% 15%,rgba(100,84,238,0.12),transparent 32%),radial-gradient(circle at 85% 85%,rgba(30,165,102,0.1),transparent 30%),var(--bg);
+}
+.login-card{
+  width:min(440px,100%);
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:38px 32px;
+  box-shadow:0 25px 80px rgba(19,20,31,0.12);
+  text-align:center;
+}
+.login-card .brand{justify-content:center;margin:0 0 20px}
+.login-card h2{
+  font:800 26px Manrope,sans-serif;
+  letter-spacing:-.8px;
+  margin:0 0 8px;
+  color:var(--ink);
+}
+.login-card p{
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.6;
+  margin:0 0 24px;
+}
+.login-form-group{text-align:left;margin-bottom:14px}
+.login-card label{
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  margin-bottom:7px;
+  color:var(--ink);
+  text-transform:uppercase;
+  letter-spacing:0.8px;
+}
+.email{
+  width:100%;
+  height:48px;
+  border:1.5px solid var(--line);
+  border-radius:12px;
+  padding:0 14px;
+  outline:none;
+  font-size:13px;
+  background:var(--input-bg);
+  color:var(--ink);
+  transition:border-color .15s,box-shadow .15s;
+}
+.email:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+
+.login-submit{
+  height:48px;
+  width:100%;
+  margin-top:6px;
+  font-size:13.5px;
+}
+.guest-btn{
+  height:44px;
+  width:100%;
+  margin-top:10px;
+  background:transparent;
+  border:1.5px dashed var(--line);
+  border-radius:12px;
+  color:var(--muted);
+  font-size:12.5px;
+  font-weight:600;
+  transition:all .15s;
+}
+.guest-btn:hover{
+  background:var(--paper-card);
+  border-color:var(--purple);
+  color:var(--purple);
+}
+
+.recent-accounts{
+  margin-top:24px;
+  padding-top:18px;
+  border-top:1px solid var(--line);
+  text-align:left;
+}
+.recent-accounts-title{
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:1px;
+  color:var(--muted);
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.recent-list{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  max-height:140px;
+  overflow-y:auto;
+}
+.recent-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--paper-card);
+  cursor:pointer;
+  font-size:12px;
+  font-weight:600;
+  color:var(--ink);
+  transition:all .15s;
+}
+.recent-item:hover{
+  background:var(--purple-light);
+  border-color:var(--purple);
+  color:var(--purple);
+}
+.recent-badge{
+  font-size:10px;
+  padding:2px 7px;
+  border-radius:8px;
+  background:var(--line);
+  color:var(--muted);
+}
+.recent-item:hover .recent-badge{
+  background:var(--purple);
+  color:white;
+}
+
+.login-note{
+  font-size:10.5px!important;
+  color:var(--muted)!important;
+  margin:16px 0 0!important;
+}
+
+/* DIALOGS */
+.dialog-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:60;
+  background:rgba(15,16,25,0.58);
+  display:grid;
+  place-items:center;
+  padding:20px;
+  backdrop-filter:blur(5px);
+}
+.confirm-dialog{
+  width:min(420px,100%);
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:26px;
+  box-shadow:0 24px 80px rgba(15,16,25,0.28);
+  animation:dialogIn .16s ease;
+}
+.dialog-icon{
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  margin-bottom:15px;
+}
+.dialog-icon.danger{background:var(--red-light);color:var(--red)}
+.dialog-icon.edit{background:var(--purple-light);color:var(--purple)}
+
+.confirm-dialog h3{font:800 18px Manrope,sans-serif;margin:0 0 8px;color:var(--ink)}
+.confirm-dialog p{font-size:13px;color:var(--muted);line-height:1.55;margin:0 0 20px}
+
+.dialog-form{display:flex;flex-direction:column;gap:14px;margin-bottom:20px}
+.dialog-field-label{font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:5px}
+.dialog-input{
+  width:100%;
+  height:44px;
+  border:1.5px solid var(--line);
+  border-radius:10px;
+  padding:0 12px;
+  font-size:13px;
+  background:var(--input-bg);
+  color:var(--ink);
+  outline:none;
+}
+.dialog-actions{display:flex;justify-content:flex-end;gap:8px}
+.dialog-btn{
+  height:40px;
+  padding:0 16px;
+  border-radius:10px;
+  font-size:12.5px;
+  font-weight:600;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  border:0;
+  transition:all .15s;
+}
+.cancel-btn{border:1px solid var(--line);background:var(--paper);color:var(--muted)}
+.cancel-btn:hover{background:var(--line);color:var(--ink)}
+.confirm-delete{background:var(--red);color:white}
+.confirm-delete:hover{background:#c43c50}
+.confirm-save{background:var(--purple);color:white}
+.confirm-save:hover{background:var(--purple-hover)}
+
+.toast{
+  position:fixed;
+  bottom:24px;
+  right:24px;
+  z-index:90;
+  background:#141520;
+  color:white;
+  padding:12px 18px;
+  border-radius:12px;
+  font-size:13px;
+  font-weight:600;
+  box-shadow:0 10px 30px rgba(0,0,0,0.25);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  animation:slideUp .2s ease;
+}
+
+.hidden{display:none!important}
+
+@keyframes dialogIn{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.85)}}
+
+/* -------------------------------------------------------------
+   MOBILE OPTIMIZATIONS (PHONE SCREENS <= 768px)
+   ------------------------------------------------------------- */
+@media(max-width:768px){
+  html,body{
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    text-rendering:optimizeLegibility;
+  }
+
+  /* Prevent mobile browsers (iOS Safari/Android Chrome) from zooming inputs */
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  select,
+  textarea{
+    font-size:16px!important;
+  }
+
+  .app{
+    grid-template-columns:1fr;
+    height:100vh;
+    height:100dvh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  aside{
+    display:none;
+  }
+
+  /* MOBILE TOP BAR */
+  .mobile-app-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 16px;
+    background:var(--paper-card);
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+    z-index:10;
+  }
+  .mobile-brand{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font:800 18px Manrope,sans-serif;
+    letter-spacing:-.5px;
+    color:var(--ink);
+  }
+  .mobile-brand .brand-icon{
+    width:28px;
+    height:28px;
+    font-size:15px;
+    border-radius:8px;
+  }
+  .mobile-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .mobile-theme-btn{
+    border:1px solid var(--line);
+    background:var(--paper);
+    padding:6px 10px;
+    border-radius:8px;
+    font-size:12px;
+    color:var(--ink);
+  }
+
+  main{
+    flex:1;
+    min-height:0;
+    height:auto;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .main-content-scroll{
+    flex:1;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:16px 14px 44px;
+  }
+
+  /* HEADER */
+  .header{
+    flex-direction:column;
+    gap:8px;
+    align-items:flex-start;
+  }
+  .header h1{
+    font-size:22px;
+    line-height:1.25;
+    margin:2px 0;
+  }
+  .subtitle{
+    font-size:12px;
+    line-height:1.4;
+  }
+  .header-pills{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    width:100%;
+    margin-top:2px;
+  }
+  .focus-pill,.sync-pill{
+    font-size:10.5px;
+    padding:5px 9px;
+  }
+
+  /* PROGRESS BAR */
+  .progress{
+    padding:14px 16px;
+    margin:14px 0;
+    gap:12px;
+    border-radius:16px;
+  }
+  .progress-title{
+    font-size:13.5px;
+  }
+  .progress-desc{
+    font-size:11px;
+    line-height:1.35;
+  }
+  .percent{
+    font-size:20px;
+  }
+
+  /* SEARCH & TOP ACTIONS */
+  .search-row{
+    flex-direction:column;
+    gap:8px;
+  }
+  .search{
+    height:44px;
+    font-size:16px!important;
+    padding:0 14px;
+  }
+  .action-buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    width:100%;
+  }
+  .primary,.recipe-btn{
+    height:44px;
+    font-size:13.5px;
+    padding:0 12px;
+    justify-content:center;
+  }
+
+  /* NEW TASK FORM */
+  .add-card{
+    padding:14px;
+    gap:12px;
+  }
+  .add-meta-row{
+    flex-direction:column;
+    align-items:stretch;
+    gap:10px;
+  }
+  .add-actions{
+    margin-left:0;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    width:100%;
+  }
+  .cancel-add,.save-btn{
+    height:40px;
+    font-size:13px;
+    justify-content:center;
+  }
+
+  /* LIST HEADER & FILTERS */
+  .list-head{
+    flex-direction:column;
+    align-items:stretch;
+    gap:10px;
+    margin:14px 0 12px;
+  }
+  .list-head-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    width:100%;
+  }
+  .list-head h2{
+    font-size:15px;
+  }
+  .clear-done-btn{
+    padding:5px 9px;
+    font-size:11px;
+  }
+  .filters{
+    display:flex;
+    width:100%;
+    padding:3px;
+    gap:4px;
+  }
+  .filter{
+    flex:1;
+    text-align:center;
+    padding:7px 0;
+    font-size:12px;
+  }
+
+  /* REGULAR TASKS ON PHONE */
+  .task{
+    padding:12px 14px;
+    gap:10px;
+    border-radius:14px;
+  }
+  .task-title{
+    font-size:13px;
+    line-height:1.4;
+  }
+  .meta{
+    display:none; /* Hide timestamps on mobile for maximum title space */
+  }
+
+  /* RECIPE CARD ON PHONE */
+  .recipe-card{
+    padding:12px 14px;
+    border-radius:14px;
+    gap:10px;
+  }
+  .recipe-card-header{
+    display:grid;
+    grid-template-columns:36px 1fr auto;
+    gap:10px;
+    align-items:center;
+  }
+  .recipe-dish-icon{
+    width:36px;
+    height:36px;
+    font-size:20px;
+    border-radius:10px;
+  }
+  .recipe-card-title{
+    font-size:13px;
+    flex-wrap:wrap;
+    gap:4px;
+    line-height:1.35;
+  }
+  .recipe-progress-badge{
+    font-size:9.5px;
+    padding:2px 6px;
+  }
+  .recipe-card-sub{
+    font-size:11px;
+    line-height:1.3;
+  }
+  .recipe-header-controls{
+    display:flex;
+    align-items:center;
+    gap:4px;
+  }
+  .recipe-expand-btn{
+    font-size:11px;
+    padding:6px 10px;
+  }
+  .recipe-inner-checklist{
+    padding:10px;
+    gap:6px;
+  }
+  .recipe-inner-item{
+    padding:9px 10px;
+    font-size:12.5px;
+    gap:8px;
+  }
+  .recipe-inner-check{
+    width:18px;
+    height:18px;
+  }
+
+  /* RECIPE VIEW ON PHONE */
+  .recipe-studio-view{
+    padding:16px 14px 44px;
+    gap:14px;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .studio-top-bar{
+    padding-bottom:10px;
+    flex-direction:row;
+    gap:8px;
+  }
+  .back-btn{
+    padding:7px 12px;
+    font-size:12px;
+  }
+  .back-hint-badge{
+    display:none;
+  }
+  .ai-live-badge{
+    font-size:10px;
+    padding:4px 8px;
+  }
+  .studio-header h2{
+    font-size:20px;
+    gap:6px;
+  }
+  .studio-header p{
+    font-size:12px;
+    line-height:1.45;
+  }
+  .ai-search-card{
+    padding:14px;
+    border-radius:16px;
+    gap:10px;
+  }
+  .ai-input-wrap{
+    flex-direction:column;
+    gap:8px;
+  }
+  .ai-input{
+    height:46px;
+    font-size:16px!important;
+    padding:0 14px;
+  }
+  .ai-btn{
+    height:44px;
+    font-size:13.5px;
+    justify-content:center;
+    width:100%;
+  }
+  .ai-spell-hint{
+    font-size:11.5px;
+    line-height:1.4;
+  }
+  .ai-result-panel{
+    padding:14px;
+    border-radius:16px;
+    gap:12px;
+  }
+  .ai-matched-banner{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:3px;
+    padding:10px 12px;
+    font-size:12px;
+  }
+  .add-custom-ing-row{
+    flex-direction:column;
+    gap:6px;
+  }
+  .add-custom-ing-input{
+    height:42px;
+    font-size:16px!important;
+  }
+  .add-custom-ing-btn{
+    width:100%;
+    height:40px;
+    font-size:13px;
+  }
+  .studio-ingredients-grid{
+    grid-template-columns:1fr;
+    max-height:none;
+    gap:8px;
+  }
+  .studio-ingredient-item{
+    padding:10px 12px;
+    font-size:13px;
+  }
+  .studio-footer-actions{
+    flex-direction:column;
+    gap:10px;
+    padding-top:12px;
+  }
+  .studio-add-tasks-btn{
+    width:100%;
+    justify-content:center;
+    height:46px;
+    font-size:13.5px;
+  }
+
+  /* TOAST ON PHONE */
+  .toast{
+    left:16px;
+    right:16px;
+    bottom:16px;
+    max-width:none;
+    text-align:center;
+    justify-content:center;
+    font-size:12px;
+    padding:10px 14px;
+    border-radius:12px;
+  }
+
+  /* LOGIN & DIALOGS ON PHONE */
+  .login{
+    padding:16px;
+  }
+  .login-card{
+    padding:28px 18px;
+    border-radius:20px;
+  }
+  .login-card h2{
+    font-size:22px;
+  }
+  .recent-item span:first-child{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    min-width:0;
+    flex:1;
+    margin-right:8px;
+  }
+  .confirm-dialog{
+    padding:20px 18px;
+    border-radius:18px;
+  }
+}
+
+/* LOGIN THEME BAR */
+.login-top-bar{
+  position:absolute;
+  top:20px;
+  right:20px;
+  z-index:60;
+}
+.theme-btn-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:8px 14px;
+  background:var(--paper);
+  border:1.5px solid var(--line);
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  color:var(--ink);
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,0.06);
+  transition:all .15s;
+}
+.theme-btn-pill:hover{
+  background:var(--purple-light);
+  border-color:var(--purple);
+  color:var(--purple);
+}
+
+/* DESKTOP SIDEBAR LOGOUT FULL BUTTON */
+.logout-full-btn{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:10px 14px;
+  border-radius:12px;
+  border:1.5px solid var(--line);
+  background:var(--paper);
+  color:var(--muted);
+  font-size:12.5px;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:10px;
+  transition:all .15s;
+}
+.logout-full-btn:hover{
+  background:var(--red-light);
+  color:var(--red);
+  border-color:var(--red);
+}
+.export-icon-btn{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  padding:7px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+}
+.export-icon-btn:hover{background:var(--line);color:var(--ink)}
+
+/* DESKTOP HEADER RIGHT TOOLS */
+.header-right-tools{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.header-user-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:5px 12px 5px 6px;
+  background:var(--paper-card);
+  border:1px solid var(--line);
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+  color:var(--ink);
+}
+.user-avatar-small{
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:var(--purple);
+  color:white;
+  display:grid;
+  place-items:center;
+  font-weight:800;
+  font-size:11px;
+}
+.header-action-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 12px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--paper-card);
+  font-size:12px;
+  font-weight:700;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s;
+}
+.header-action-btn:hover{
+  background:var(--paper);
+  border-color:var(--purple);
+  color:var(--purple);
+}
+.header-action-btn.logout-btn:hover{
+  background:var(--red-light);
+  border-color:var(--red);
+  color:var(--red);
+}
+
+/* MOBILE WORKSPACE STRIP */
+.mobile-workspace-strip{
+  display:none;
+}
+@media(max-width:768px){
+  .header-right-tools{
+    display:none;
+  }
+  .m-action-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:6px 11px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink);
+    cursor:pointer;
+    transition:all .15s;
+  }
+  .m-action-btn.theme-toggle-btn:hover{
+    background:var(--purple-light);
+    color:var(--purple);
+  }
+  .m-action-btn.logout-btn{
+    color:var(--red);
+    background:var(--red-light);
+    border-color:transparent;
+  }
+  .m-action-btn.logout-btn:hover{
+    background:var(--red);
+    color:white;
+  }
+
+  .mobile-workspace-strip{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:6px 2px 10px;
+    margin-bottom:8px;
+    scrollbar-width:none;
+  }
+  .mobile-workspace-strip::-webkit-scrollbar{
+    display:none;
+  }
+  .m-workspace-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:8px 13px;
+    border-radius:20px;
+    border:1.5px solid var(--line);
+    background:var(--paper-card);
+    color:var(--ink);
+    font-size:12px;
+    font-weight:700;
+    white-space:nowrap;
+    cursor:pointer;
+    flex-shrink:0;
+    transition:all .15s;
+  }
+  .m-workspace-pill.active{
+    background:var(--purple);
+    color:white;
+    border-color:var(--purple);
+  }
+  .m-workspace-pill.active .m-pill-badge{
+    background:rgba(255,255,255,0.25);
+    color:white;
+  }
+  .m-workspace-pill.recipe-pill{
+    border-color:var(--orange);
+    color:var(--orange);
+  }
+  .m-workspace-pill.recipe-pill.active{
+    background:var(--orange);
+    color:white;
+  }
+  .m-pill-badge{
+    font-size:10px;
+    padding:2px 6px;
+    border-radius:10px;
+    background:var(--line);
+    color:var(--muted);
+    font-weight:800;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN (100% FULL SCREEN) -->
+<div class="login" id="loginScreen">
+  <div class="login-top-bar">
+    <button class="theme-btn-pill" id="loginThemeBtn" type="button">
+      <span class="theme-icon">🌙</span> <span class="theme-text">Dark Mode</span>
+    </button>
+  </div>
+  <div class="login-card">
+    <div class="brand"><span class="brand-icon">✓</span> taskly</div>
+    <h2>Your day, in control.</h2>
+    <p>Sign in with your email to keep your tasks and recipes organized.<br>No password or verification required.</p>
+    
+    <form id="loginForm">
+      <div class="login-form-group">
+        <label for="emailInput">Email address</label>
+        <input class="email" id="emailInput" type="email" placeholder="you@example.com" autocomplete="email" required>
+      </div>
+      <button class="primary login-submit" type="submit">Continue →</button>
+      <button class="guest-btn" id="guestBtn" type="button">✦ Continue as Guest</button>
+    </form>
+
+    <div class="recent-accounts hidden" id="recentAccountsSection">
+      <div class="recent-accounts-title">Previously used on this browser</div>
+      <div class="recent-list" id="recentList"></div>
+    </div>
+
+    <p class="login-note">🔒 Your data is permanently saved in this browser. When you log out and log back in with the same email, your tasks and recipes are always restored.</p>
+  </div>
+</div>
+
+<!-- 100% FULL SCREEN APP CONTAINER -->
+<div class="app hidden" id="app">
+  <!-- DESKTOP SIDEBAR -->
+  <aside>
+    <div class="brand"><span class="brand-icon">✓</span> taskly</div>
+    
+    <div class="side-nav-wrap">
+      <div class="section-label">Workspace</div>
+      <button class="nav active" data-section="all"><span class="nav-icon">▦</span> All Tasks <span class="nav-badge" id="badgeAll">0</span></button>
+      <button class="nav" data-section="pinned"><span class="nav-icon">★</span> Important <span class="nav-badge" id="badgePinned">0</span></button>
+      <button class="nav" data-section="today"><span class="nav-icon">◷</span> Added Today <span class="nav-badge" id="badgeToday">0</span></button>
+      <button class="nav recipe-nav" id="sidebarRecipeBtn" type="button"><span class="nav-icon">🍳</span> Recipe <span class="nav-badge" id="badgeRecipe">0</span></button>
+    </div>
+
+    <div class="side-spacer"></div>
+
+    <button class="theme-toggle" id="themeToggle" type="button">
+      <span id="themeLabel">🌙 Dark Mode</span>
+      <span id="themeIcon">Switch</span>
+    </button>
+
+    <div class="account" id="accountMenu">
+      <div class="avatar" id="avatar">U</div>
+      <div class="account-info">
+        <strong id="userEmail">user@email.com</strong>
+        <small id="syncStatus">Saved locally</small>
+      </div>
+      <div class="account-actions">
+        <button class="export-icon-btn" id="exportBtn" title="Export Backup (JSON)" aria-label="Export Backup">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <button class="logout-full-btn" id="logoutBtn" type="button" title="Log out">
+      <span class="logout-icon">↪</span>
+      <span>Log out</span>
+    </button>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <main>
+    <!-- MOBILE TOP APP BAR -->
+    <div class="mobile-app-bar">
+      <div class="mobile-brand">
+        <span class="brand-icon">✓</span> taskly
+      </div>
+      <div class="mobile-actions">
+        <button class="m-action-btn theme-toggle-btn" id="mobileThemeBtn" type="button" title="Toggle Theme">
+          <span class="m-theme-icon">🌙</span> <span class="m-theme-text">Dark</span>
+        </button>
+        <button class="m-action-btn logout-btn" id="mobileLogoutBtn" type="button" title="Log out">
+          <span>↪</span> <span>Logout</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- VIEW 1: MAIN TASKS VIEW -->
+    <div class="main-content-scroll" id="mainTasksView">
+      <div class="header">
+        <div>
+          <div class="date-label" id="todayLabel">TODAY</div>
+          <h1>Good to see you 👋</h1>
+          <p class="subtitle" id="dailyMessage">A little progress each day adds up.</p>
+        </div>
+        <div class="header-right-tools">
+          <div class="header-user-badge">
+            <span class="user-avatar-small" id="headerAvatar">U</span>
+            <span class="user-email-text" id="headerUserEmail">user@email.com</span>
+          </div>
+          <button class="header-action-btn theme-toggle-btn" id="headerThemeBtn" type="button" title="Toggle Dark/Light Mode">
+            <span class="h-theme-icon">🌙</span> <span class="h-theme-text">Dark Mode</span>
+          </button>
+          <button class="header-action-btn logout-btn" id="headerLogoutBtn" type="button" title="Log out">
+            <span>↪</span> <span>Log out</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- MOBILE WORKSPACE NAV STRIP (ALL, IMPORTANT, TODAY, RECIPE) -->
+      <div class="mobile-workspace-strip">
+        <button class="m-workspace-pill active" data-section="all"><span class="m-pill-icon">▦</span> All Tasks <span class="m-pill-badge" id="mBadgeAll">0</span></button>
+        <button class="m-workspace-pill" data-section="pinned"><span class="m-pill-icon">★</span> Important <span class="m-pill-badge" id="mBadgePinned">0</span></button>
+        <button class="m-workspace-pill" data-section="today"><span class="m-pill-icon">◷</span> Added Today <span class="m-pill-badge" id="mBadgeToday">0</span></button>
+        <button class="m-workspace-pill recipe-pill" id="mobileRecipePill" type="button"><span class="m-pill-icon">🍳</span> Recipe <span class="m-pill-badge" id="mBadgeRecipe">0</span></button>
+      </div>
+
+      <section class="progress">
+        <div class="progress-content">
+          <div class="progress-title">Daily progress</div>
+          <div class="progress-desc" id="progressText">You're just getting started. Let's do this!</div>
+          <div class="track"><div class="fill" id="progressFill"></div></div>
+        </div>
+        <div class="percent" id="progressNum">0%</div>
+      </section>
+
+      <div class="search-row">
+        <input class="search" id="searchInput" type="search" placeholder="⌕  Search tasks or recipes..." aria-label="Search tasks">
+        <div class="action-buttons">
+          <button class="recipe-btn" id="openRecipeStudioBtn" type="button">🍳 Recipe</button>
+          <button class="primary" id="newTaskBtn" type="button">＋ New task</button>
+        </div>
+      </div>
+
+      <!-- NEW TASK FORM -->
+      <form class="add-card" id="taskForm" hidden>
+        <div class="add-main-row">
+          <input class="task-entry" id="taskInput" type="text" placeholder="What do you need to do?" maxlength="200" required>
+        </div>
+        <div class="add-meta-row">
+          <div class="input-label-group">
+            <span>Priority:</span>
+            <select class="input-select" id="taskPriority">
+              <option value="none">Normal</option>
+              <option value="low">Low 🟢</option>
+              <option value="medium">Medium 🟡</option>
+              <option value="high">High 🔴</option>
+            </select>
+          </div>
+          <div class="add-actions">
+            <button class="cancel-add" id="cancelAddBtn" type="button">Cancel</button>
+            <button class="primary save-btn" type="submit">Save Task</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="list-head">
+        <div class="list-head-row">
+          <h2 id="listTitle">My tasks <span class="count" id="taskCount">(0)</span></h2>
+          <button class="clear-done-btn hidden" id="clearDoneBtn" type="button">Clear Completed</button>
+        </div>
+        <div class="filters">
+          <button class="filter active" data-filter="all">All</button>
+          <button class="filter" data-filter="active">Active</button>
+          <button class="filter" data-filter="done">Completed</button>
+        </div>
+      </div>
+
+      <div class="task-list" id="tasks"></div>
+      <div class="hint">🔒 Tasks and recipes are automatically saved to your browser. Completed items move to the bottom.</div>
+    </div>
+
+    <!-- VIEW 2: 100% FULL SCREEN RECIPE VIEW -->
+    <div class="recipe-studio-view hidden" id="recipeStudioView">
+      <div class="studio-top-bar">
+        <button class="back-btn" id="backToTasksBtn" type="button">
+          ← Back to Tasks
+          <span class="back-hint-badge">Esc / Back</span>
+        </button>
+        <div class="ai-live-badge">
+          <span class="ai-pulse-dot"></span>
+          <span>Recipe</span>
+        </div>
+      </div>
+
+      <div class="studio-header">
+        <h2><span>🍳</span> Recipe</h2>
+        <p>Type any dish name to generate the complete ingredient checklist instantly.</p>
+      </div>
+
+      <div class="ai-search-card">
+        <div class="ai-search-label">
+          <span>✨ Recipe Generator</span>
+          <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:none;">Unlimited Dishes</span>
+        </div>
+        <div class="ai-input-wrap">
+          <input class="ai-input" id="aiDishInput" type="text" placeholder="Type any dish (e.g. pizza, pasta, burger)..." autocomplete="off">
+          <button class="ai-btn" id="aiGenerateBtn" type="button">✨ Generate</button>
+        </div>
+        <div class="ai-spell-hint">
+          <span>💡</span> <span>Try typing: <strong>pizza</strong>, <strong>burger</strong>, <strong>pasta</strong>, <strong>tacos</strong>, <strong>biryani</strong></span>
+        </div>
+      </div>
+
+      <!-- AI RESULTS PANEL -->
+      <div class="ai-result-panel" id="aiResultPanel">
+        <div class="ai-matched-banner" id="aiMatchedBanner">
+          <span id="aiMatchedText">✨ Recipe: <strong>Pizza</strong></span>
+          <small id="aiMatchedNote">Ingredients checklist ready</small>
+        </div>
+
+        <!-- ADD EXTRA CUSTOM INGREDIENT IN STUDIO -->
+        <div class="add-custom-ing-row">
+          <input class="add-custom-ing-input" id="customIngInput" type="text" placeholder="Add extra ingredient (e.g. cheese, olive oil)...">
+          <button class="add-custom-ing-btn" id="addCustomIngBtn" type="button">＋ Add Item</button>
+        </div>
+
+        <div class="studio-ingredients-grid" id="studioIngredientsGrid"></div>
+
+        <div class="studio-footer-actions">
+          <div style="font-size:13px;color:var(--muted);font-weight:600;" id="studioSelectionCount">Selected 0 items</div>
+          <button class="studio-add-tasks-btn" id="studioAddTasksBtn" type="button">＋ Add to My Tasks</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- EDIT TASK MODAL -->
+<div class="dialog-backdrop hidden" id="editDialog" role="presentation">
+  <section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="editDialogTitle">
+    <div class="dialog-icon edit">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </div>
+    <h3 id="editDialogTitle">Edit Task</h3>
+    <form class="dialog-form" id="editForm">
+      <div>
+        <label class="dialog-field-label" for="editTitleInput">Task Description</label>
+        <input class="dialog-input" id="editTitleInput" type="text" maxlength="200" required>
+      </div>
+      <div>
+        <label class="dialog-field-label" for="editPrioritySelect">Priority</label>
+        <select class="dialog-input" id="editPrioritySelect">
+          <option value="none">Normal</option>
+          <option value="low">Low 🟢</option>
+          <option value="medium">Medium 🟡</option>
+          <option value="high">High 🔴</option>
+        </select>
+      </div>
+      <div class="dialog-actions">
+        <button class="dialog-btn cancel-btn" id="cancelEdit" type="button">Cancel</button>
+        <button class="dialog-btn confirm-save" type="submit">Update Task</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<!-- DELETE TASK CONFIRMATION MODAL -->
+<div class="dialog-backdrop hidden" id="deleteDialog" role="presentation">
+  <section class="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle">
+    <div class="dialog-icon danger">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
+    </div>
+    <h3 id="deleteTitle">Delete this task?</h3>
+    <p>This task will be permanently removed from your list.</p>
+    <div class="dialog-actions">
+      <button class="dialog-btn cancel-btn" id="cancelDelete" type="button">Cancel</button>
+      <button class="dialog-btn confirm-delete" id="confirmDelete" type="button">Delete</button>
+    </div>
+  </section>
+</div>
+
+<script>
+'use strict';
+
+const $ = id => document.getElementById(id);
+
+let currentEmail = '';
+let tasks = [];
+let filter = 'all';
+let section = 'all';
+let searchTerm = '';
+let pendingDeleteId = null;
+let pendingEditId = null;
+let currentAIResult = null;
+let currentView = 'tasks';
+
+// Storage Keys
+const CURRENT_USER_KEY = 'taskly_v2_current';
+const LAST_USER_KEY = 'taskly_v2_last_email';
+const ACCOUNTS_INDEX_KEY = 'taskly_v2_accounts';
+const THEME_KEY = 'taskly_theme';
+const getKey = email => 'taskly_v2_' + email.trim().toLowerCase();
+
+// -------------------------------------------------------------
+// EXPANDED KNOWLEDGE BASE (100% CLEAN ENGLISH INGREDIENTS)
+// -------------------------------------------------------------
+const POPULAR_DISHES = [
+  {
+    key: 'pizza', name: 'Pizza', icon: '🍕',
+    aliases: ['piza', 'pizaa', 'pizzza', 'pijja', 'peezza', 'pizz', 'pitza', 'peja', 'piz'],
+    items: ['Pizza Dough / Base', 'Mozzarella Cheese', 'Pizza Sauce', 'Bell Peppers (Capsicum)', 'Diced Onions', 'Fresh Tomatoes', 'Oregano & Chilli Flakes', 'Olive Oil & Butter', 'Sweet Corn & Olives (Optional)']
+  },
+  {
+    key: 'burger', name: 'Burger', icon: '🍔',
+    aliases: ['buger', 'brgr', 'bargur', 'burgr', 'bagar', 'burge', 'barger'],
+    items: ['Burger Buns', 'Vegetable / Potato Patty', 'Cheddar Cheese Slices', 'Crisp Lettuce Leaves', 'Tomato & Onion Slices', 'Mayonnaise', 'Tomato Ketchup', 'Butter']
+  },
+  {
+    key: 'butter_chicken', name: 'Butter Chicken', icon: '🍗',
+    aliases: ['btr chkn', 'butar chikan', 'butter chiken', 'murg makhani', 'butter chikan', 'bater chicken'],
+    items: ['Boneless Chicken Pieces', 'Butter', 'Fresh Heavy Cream', 'Tomato Puree', 'Ginger-Garlic Paste', 'Cashew Nut Paste', 'Kasuri Methi (Fenugreek)', 'Kashmiri Red Chilli & Garam Masala']
+  },
+  {
+    key: 'poha', name: 'Kanda Poha', icon: '🥣',
+    aliases: ['pohe', 'pohaa', 'kanda poha', 'pooha', 'puha'],
+    items: ['Flattened Rice (Poha)', 'Finely Chopped Onions', 'Diced Potatoes', 'Roasted Peanuts', 'Mustard Seeds & Curry Leaves', 'Green Chillies & Turmeric Powder', 'Fresh Lemon Juice & Fresh Cilantro']
+  },
+  {
+    key: 'idli_sambar', name: 'Idli Sambar', icon: '🍚',
+    aliases: ['edli', 'idly', 'idlee', 'sambhar idli', 'idli'],
+    items: ['Idli Batter (Rice & Lentil)', 'Yellow Pigeon Pea Lentils (Toor Dal)', 'Sambar Spice Blend', 'Diced Vegetables & Shallots', 'Tamarind Pulp', 'Fresh Coconut (for Chutney)', 'Mustard Seeds & Curry Leaves']
+  },
+  {
+    key: 'dal_makhani', name: 'Dal Makhani', icon: '🍲',
+    aliases: ['dal makhni', 'daal makhni', 'daal makhani', 'makhni dal', 'dhal makhani'],
+    items: ['Whole Black Lentils (Urad Dal)', 'Red Kidney Beans', 'Salted Butter', 'Fresh Whipping Cream', 'Tomato Puree', 'Ginger-Garlic Paste', 'Degi Mirch Paprika & Garam Masala', 'Dried Fenugreek Leaves']
+  },
+  {
+    key: 'kadhai_paneer', name: 'Kadhai Paneer', icon: '🥘',
+    aliases: ['kadai paner', 'kadhai paner', 'karahi paneer', 'kadai paneer'],
+    items: ['Fresh Paneer Cubes (Cottage Cheese)', 'Diced Bell Peppers', 'Cubed Onions & Tomatoes', 'Freshly Ground Kadhai Spices', 'Ginger-Garlic Paste', 'Kasuri Methi', 'Cooking Ghee or Oil', 'Fresh Cilantro']
+  },
+  {
+    key: 'litti_chokha', name: 'Litti Chokha', icon: '🫓',
+    aliases: ['litti choka', 'litti', 'liti chokha', 'bihari litti'],
+    items: ['Roasted Gram Flour (Sattu)', 'Whole Wheat Flour', 'Cold Pressed Mustard Oil', 'Nigella Seeds & Carom Seeds (Ajwain)', 'Roasted Eggplant (Baingan)', 'Charred Tomatoes & Boiled Potatoes', 'Pure Desi Ghee (for Dipping)', 'Garlic, Green Chilli & Lemon Juice']
+  },
+  {
+    key: 'dahi_bhalla', name: 'Dahi Bhalla / Dahi Vada', icon: '🥣',
+    aliases: ['dahi bhalle', 'dahi vada', 'dahi bade', 'dahi bada', 'dahi pakodi'],
+    items: ['Urad & Moong Dal Lentils', 'Chilled Thick Yogurt', 'Roasted Cumin Powder', 'Sweet Tamarind Chutney', 'Spicy Mint & Coriander Chutney', 'Chaat Masala & Black Salt', 'Fresh Pomegranate Seeds']
+  },
+  {
+    key: 'french_fries', name: 'French Fries', icon: '🍟',
+    aliases: ['frnch fries', 'french fry', 'fries', 'finger chips'],
+    items: ['Large Russet Potatoes', 'Cornstarch', 'Vegetable Oil (for Deep Frying)', 'Sea Salt & Seasoning', 'Mayonnaise & Tomato Ketchup']
+  },
+  {
+    key: 'garlic_bread', name: 'Garlic Bread', icon: '🥖',
+    aliases: ['garlik bread', 'garlic bred', 'cheesy garlic bread'],
+    items: ['French Baguette / Crusty Bread', 'Minced Fresh Garlic', 'Softened Salted Butter', 'Grated Mozzarella Cheese', 'Oregano & Red Pepper Flakes', 'Finely Chopped Fresh Parsley']
+  },
+  {
+    key: 'lassi', name: 'Sweet Mango Lassi', icon: '🥛',
+    aliases: ['mango lassi', 'lasi', 'sweet lassi'],
+    items: ['Thick Greek Yogurt / Curd', 'Sweet Mango Puree', 'Sugar or Honey', 'Ground Cardamom Powder', 'Chilled Water & Ice Cubes', 'Sliced Pistachios & Almonds', 'Saffron Strands']
+  },
+  {
+    key: 'gulab_jamun', name: 'Gulab Jamun', icon: '🍯',
+    aliases: ['gulab jamn', 'gulabjamun', 'gulaab jamun', 'gulab jaman'],
+    items: ['Milk Solids (Mawa / Khoya)', 'All-Purpose Flour (Maida)', 'Cardamom & Rose Water Sugar Syrup', 'Pinch of Baking Soda', 'Pure Desi Ghee (for Frying)']
+  },
+  {
+    key: 'gajar_halwa', name: 'Gajar Ka Halwa', icon: '🥕',
+    aliases: ['gajar halwa', 'carrot halwa', 'gajar ka halwa', 'gajrela'],
+    items: ['Freshly Grated Red Carrots', 'Full Cream Milk', 'Pure Desi Ghee', 'Khoya / Evaporated Milk Solids', 'Granulated Sugar', 'Green Cardamom Powder', 'Sliced Cashews, Almonds & Raisins']
+  },
+  {
+    key: 'chocolate_brownie', name: 'Fudge Chocolate Brownie', icon: '🍫',
+    aliases: ['browni', 'brownie', 'choclate brownie', 'fudge brownie'],
+    items: ['Dark Chocolate / Dutch Cocoa Powder', 'All-Purpose Flour', 'Melted Butter', 'Granulated Sugar', 'Eggs or Condensed Milk', 'Pure Vanilla Extract', 'Chopped Walnuts']
+  },
+  {
+    key: 'pasta', name: 'Pasta', icon: '🍝',
+    aliases: ['passta', 'pastta', 'macroni', 'psta', 'penne', 'macaroni', 'pastah'],
+    items: ['Penne or Macaroni Pasta', 'Pasta Sauce (Marinara or Alfredo)', 'Minced Garlic', 'Extra Virgin Olive Oil & Butter', 'Parmesan / Mozzarella Cheese', 'Bell Peppers & Sweet Corn', 'Italian Herb Seasoning', 'Crushed Black Pepper & Salt']
+  },
+  {
+    key: 'chai', name: 'Masala Chai', icon: '☕',
+    aliases: ['chaii', 'tea', 'chaay', 'masalachai', 'chaye', 'ti'],
+    items: ['Black Tea Leaves', 'Fresh Whole Milk', 'Granulated Sugar', 'Fresh Crushed Ginger Root', 'Green Cardamom Pods', 'Whole Cloves & Black Peppercorns']
+  },
+  {
+    key: 'sandwich', name: 'Club Sandwich', icon: '🥪',
+    aliases: ['sandwitch', 'sendwich', 'sandvich', 'sandwuch', 'sanwich'],
+    items: ['Bread Slices', 'Salted Butter', 'Green Mint Chutney', 'Boiled Sliced Potatoes', 'Sliced Cucumbers & Tomatoes', 'Onion Rings', 'Sandwich Seasoning', 'Cheese Slices']
+  },
+  {
+    key: 'maggi', name: 'Maggi / Noodles', icon: '🍲',
+    aliases: ['magi', 'meggi', 'meggie', 'maggie', 'maggiee'],
+    items: ['Instant Noodle Packs', 'Noodle Tastemaker Seasoning', 'Butter', 'Diced Onions & Tomatoes', 'Green Chillies & Green Peas', 'Diced Bell Peppers']
+  },
+  {
+    key: 'biryani', name: 'Biryani', icon: '🍛',
+    aliases: ['birani', 'biryany', 'briyani', 'biryaani', 'beryani', 'bryani'],
+    items: ['Aged Long Grain Basmati Rice', 'Biryani Spice Blend', 'Paneer, Vegetables or Chicken', 'Thick Plain Yogurt', 'Crispy Golden Fried Onions', 'Pure Desi Ghee', 'Warm Saffron Milk', 'Fresh Mint & Cilantro Leaves']
+  },
+  {
+    key: 'paneer_butter_masala', name: 'Paneer Butter Masala', icon: '🥘',
+    aliases: ['paner', 'paneer', 'pneer', 'panir', 'butter paneer', 'paner butter masala'],
+    items: ['Fresh Paneer Cubes (Cottage Cheese)', 'Butter', 'Fresh Heavy Cream', 'Ripe Tomatoes & Onions', 'Ginger-Garlic Paste', 'Cashew Nut Paste', 'Kasuri Methi (Fenugreek Leaves)', 'Garam Masala & Kashmiri Paprika']
+  },
+  {
+    key: 'chole_bhature', name: 'Chole Bhature', icon: '🧆',
+    aliases: ['chole', 'choley', 'bhature', 'bhaturey', 'chola', 'chole bature'],
+    items: ['Soaked White Chickpeas (Kabuli Chana)', 'All-Purpose Flour (for Bhature)', 'Thick Plain Yogurt', 'Chole Masala Spice Blend', 'Onion & Tomato Puree', 'Julienned Ginger & Green Chillies', 'Baking Powder & Frying Oil']
+  },
+  {
+    key: 'pav_bhaji', name: 'Pav Bhaji', icon: '🍞',
+    aliases: ['pav', 'paav', 'bhaji', 'bhajee', 'pavbhaji', 'paav bhaji', 'paw bhaji'],
+    items: ['Soft Pav Buns', 'Salted Butter', 'Boiled Mashed Potatoes', 'Cauliflower & Green Peas', 'Diced Bell Peppers', 'Tomatoes & Onions', 'Pav Bhaji Spice Blend', 'Fresh Lemon Wedges & Chopped Cilantro']
+  },
+  {
+    key: 'dosa', name: 'Dosa & Sambar', icon: '🥞',
+    aliases: ['dhosa', 'dosaa', 'dosha', 'masala dosa'],
+    items: ['Fermented Dosa Batter', 'Spiced Mashed Potato Filling', 'Mustard Seeds & Curry Leaves', 'Yellow Pigeon Pea Lentils (Toor Dal)', 'Sambar Vegetables & Spices', 'Fresh Coconut Chutney', 'Cooking Oil or Ghee']
+  },
+  {
+    key: 'momos', name: 'Momos & Spicy Dip', icon: '🥟',
+    aliases: ['momo', 'momoz', 'moumo', 'dimsum'],
+    items: ['All-Purpose Flour (Dough)', 'Finely Shredded Cabbage', 'Grated Carrots & Spring Onions', 'Minced Garlic & Ginger', 'Soy Sauce & Ground Black Pepper', 'Dried Red Chillies & Tomatoes (for Dip)']
+  },
+  {
+    key: 'chowmein', name: 'Chowmein / Hakka Noodles', icon: '🍜',
+    aliases: ['chaumin', 'chowmin', 'chawmin', 'nudles', 'noodles', 'hakka noodles'],
+    items: ['Hakka Noodles Pack', 'Shredded Cabbage', 'Julienned Bell Peppers & Onions', 'Dark Soy Sauce & Red Chilli Sauce', 'Rice Vinegar', 'Minced Garlic & Black Pepper']
+  },
+  {
+    key: 'fried_rice', name: 'Fried Rice', icon: '🍚',
+    aliases: ['fried rice', 'friedrice', 'frice', 'fride rice'],
+    items: ['Cooked Basmati Rice (Chilled)', 'Diced Spring Onions', 'Finely Diced Carrots & French Beans', 'Diced Bell Peppers', 'Minced Garlic', 'Soy Sauce & Rice Vinegar', 'White Pepper Powder & Sesame Oil']
+  },
+  {
+    key: 'aloo_paratha', name: 'Aloo Paratha', icon: '🫓',
+    aliases: ['alu paratha', 'aloo pratha', 'alu pratha', 'paratha', 'pratha'],
+    items: ['Whole Wheat Flour (Atta)', 'Boiled Mashed Potatoes', 'Green Chillies & Fresh Cilantro', 'Carom Seeds (Ajwain) & Dry Mango Powder', 'Pure Desi Ghee or White Butter', 'Plain Yogurt & Pickle (for Serving)']
+  },
+  {
+    key: 'dal_tadka', name: 'Dal Tadka', icon: '🥣',
+    aliases: ['daal', 'dal', 'daltadka', 'daal tadka'],
+    items: ['Yellow Lentils (Toor or Moong Dal)', 'Pure Desi Ghee (for Tempering)', 'Cumin Seeds (Jeera)', 'Minced Garlic & Asafoetida (Hing)', 'Whole Dried Red Chillies', 'Diced Tomatoes & Green Chillies', 'Fresh Chopped Cilantro']
+  },
+  {
+    key: 'pancakes', name: 'Fluffy Pancakes', icon: '🥞',
+    aliases: ['pancak', 'pankake', 'pan cake'],
+    items: ['All-Purpose Flour', 'Fresh Milk', 'Melted Butter', 'Baking Powder', 'Granulated Sugar & Pinch of Salt', 'Pure Maple Syrup or Honey', 'Vanilla Extract']
+  },
+  {
+    key: 'cake', name: 'Chocolate Cake', icon: '🎂',
+    aliases: ['kaek', 'cake', 'choclate cake', 'choclate', 'cack'],
+    items: ['All-Purpose Flour', 'Unsweetened Cocoa Powder', 'Powdered Confectioners Sugar', 'Baking Powder & Baking Soda', 'Whole Milk or Buttermilk', 'Melted Butter or Vegetable Oil', 'Dark Chocolate Ganache']
+  },
+  {
+    key: 'cold_coffee', name: 'Cold Coffee', icon: '🧋',
+    aliases: ['coffe', 'koffee', 'coldcoffee', 'cold coffe'],
+    items: ['Instant Espresso / Coffee Powder', 'Chilled Whole Milk', 'Granulated Sugar', 'Ice Cubes', 'Chocolate Drizzle Syrup', 'Vanilla Ice Cream Scoop (Optional)']
+  },
+  {
+    key: 'samosa', name: 'Crispy Samosa', icon: '🥟',
+    aliases: ['samose', 'smosa', 'samosaa'],
+    items: ['All-Purpose Flour & Carom Seeds (Ajwain)', 'Boiled Potatoes & Green Peas', 'Crushed Coriander Seeds & Cumin', 'Garam Masala & Green Chillies', 'Vegetable Oil (for Deep Frying)', 'Mint Chutney & Tamarind Dip']
+  },
+  {
+    key: 'shahi_paneer', name: 'Shahi Paneer', icon: '🧀',
+    aliases: ['shahi paneer', 'shahi paner', 'shahi pneer'],
+    items: ['Fresh Paneer Cubes (Cottage Cheese)', 'Cashew Nut Paste', 'Ripe Tomatoes & Onions', 'Fresh Cream & Saffron', 'Green Cardamom & Dried Fenugreek', 'Pure Desi Ghee & Butter']
+  },
+  {
+    key: 'rajma_chawal', name: 'Rajma Chawal', icon: '🍛',
+    aliases: ['rajma', 'rajma chawal', 'rajmah'],
+    items: ['Red Kidney Beans (Rajma)', 'Long Grain Basmati Rice', 'Finely Diced Onions & Tomatoes', 'Ginger-Garlic Paste', 'Rajma Masala Spice Blend', 'Pure Desi Ghee']
+  },
+  {
+    key: 'omelette', name: 'Egg Omelette', icon: '🍳',
+    aliases: ['amlet', 'omlet', 'omelete', 'egg', 'ande'],
+    items: ['Fresh Farm Eggs', 'Finely Diced Onions', 'Diced Tomatoes & Green Chillies', 'Fresh Chopped Cilantro', 'Salted Butter or Oil', 'Sea Salt & Coarse Black Pepper', 'Toasted Bread Slices']
+  },
+  {
+    key: 'pani_puri', name: 'Pani Puri / Golgappe', icon: '🧆',
+    aliases: ['golgappe', 'panipuri', 'gol gappe', 'puchka', 'gupchup'],
+    items: ['Crisp Hollow Puris', 'Boiled Potatoes & Black Chickpeas', 'Spicy Mint & Coriander Infused Water', 'Sweet Tamarind & Jaggery Chutney', 'Chaat Masala, Black Salt & Boondi']
+  }
+];
+
+// LEVENSHTEIN DISTANCE FOR FUZZY SPELLING
+function levenshtein(a, b) {
+  const an = a ? a.length : 0, bn = b ? b.length : 0;
+  if (!an) return bn;
+  if (!bn) return an;
+  const matrix = Array.from({ length: bn + 1 }, () => Array(an + 1).fill(0));
+  for (let i = 0; i <= an; i++) matrix[0][i] = i;
+  for (let j = 0; j <= bn; j++) matrix[j][0] = j;
+  for (let j = 1; j <= bn; j++) {
+    for (let i = 1; i <= an; i++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[j][i] = Math.min(matrix[j - 1][i] + 1, matrix[j][i - 1] + 1, matrix[j - 1][i - 1] + cost);
+    }
+  }
+  return matrix[bn][an];
+}
+
+// -------------------------------------------------------------
+// UNLIMITED CHEF NEURAL / SEMANTIC ENGINE (100% CLEAN ENGLISH)
+// -------------------------------------------------------------
+function generateUnlimitedAIRecipe(rawQuery) {
+  const query = rawQuery.trim();
+  const qLower = query.toLowerCase();
+
+  const clean = qLower.replace(/[^a-z0-9 ]/g, '');
+  
+  // Exact or Alias
+  for (const r of POPULAR_DISHES) {
+    if (r.key === clean || r.name.toLowerCase() === clean || r.aliases.includes(clean)) {
+      return { recipe: r, userQuery: query, isFuzzy: false };
+    }
+  }
+
+  // Substring Match
+  for (const r of POPULAR_DISHES) {
+    if (clean.includes(r.key) || r.name.toLowerCase().includes(clean) || r.aliases.some(a => clean.includes(a) || a.includes(clean))) {
+      return { recipe: r, userQuery: query, isFuzzy: true };
+    }
+  }
+
+  // Fuzzy Levenshtein spell match
+  let bestDbMatch = null;
+  let minDistance = 999;
+  for (const r of POPULAR_DISHES) {
+    const targets = [r.key, r.name.toLowerCase(), ...r.aliases];
+    for (const t of targets) {
+      const dist = levenshtein(clean, t);
+      if (dist < minDistance && dist <= Math.max(2, Math.floor(t.length * 0.45))) {
+        minDistance = dist;
+        bestDbMatch = r;
+      }
+    }
+  }
+  if (bestDbMatch) {
+    return { recipe: bestDbMatch, userQuery: query, isFuzzy: true };
+  }
+
+  // UNLIMITED CHEF HEURISTIC ENGINE (100% IN CRISP ENGLISH)
+  const formattedName = query.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  const items = [];
+  let icon = '🍳';
+
+  // Detect Main Protein / Base
+  let mainItem = `${formattedName} (Core Ingredient)`;
+  if (qLower.includes('chicken') || qLower.includes('chikan') || qLower.includes('murg')) {
+    mainItem = 'Fresh Boneless Chicken';
+    icon = '🍗';
+  } else if (qLower.includes('mutton') || qLower.includes('lamb') || qLower.includes('gosht')) {
+    mainItem = 'Tender Mutton / Lamb Pieces';
+    icon = '🍖';
+  } else if (qLower.includes('fish') || qLower.includes('salmon') || qLower.includes('prawn') || qLower.includes('shrimp')) {
+    mainItem = 'Fresh Fish / Prawns';
+    icon = '🐟';
+  } else if (qLower.includes('egg') || qLower.includes('anda')) {
+    mainItem = 'Fresh Farm Eggs';
+    icon = '🥚';
+  } else if (qLower.includes('paneer') || qLower.includes('cottage cheese')) {
+    mainItem = 'Fresh Cottage Cheese (Paneer Cubes)';
+    icon = '🧀';
+  } else if (qLower.includes('tofu')) {
+    mainItem = 'Firm Organic Tofu';
+    icon = '🥗';
+  } else if (qLower.includes('mushroom')) {
+    mainItem = 'Fresh Button Mushrooms';
+    icon = '🍄';
+  } else if (qLower.includes('potato') || qLower.includes('aloo')) {
+    mainItem = 'Fresh Potatoes';
+    icon = '🥔';
+  } else if (qLower.includes('avocado')) {
+    mainItem = 'Ripe Hass Avocados';
+    icon = '🥑';
+  }
+
+  items.push(mainItem);
+
+  // Culinary style analysis
+  if (qLower.includes('biryani') || qLower.includes('pulao') || qLower.includes('rice')) {
+    icon = '🍛';
+    items.push('Aged Long Grain Basmati Rice');
+    items.push('Biryani Whole Spices (Cardamom, Cloves & Cinnamon)');
+    items.push('Caramelized Golden Fried Onions');
+    items.push('Pure Desi Ghee');
+    items.push('Plain Greek Yogurt');
+    items.push('Warm Saffron Milk & Rose Water');
+    items.push('Fresh Mint & Cilantro Leaves');
+  } else if (qLower.includes('curry') || qLower.includes('masala') || qLower.includes('gravy') || qLower.includes('korma')) {
+    icon = '🍲';
+    items.push('Diced Onions & Ripe Tomatoes');
+    items.push('Ginger-Garlic Paste');
+    items.push('Turmeric, Kashmiri Paprika & Coriander Powder');
+    items.push('Garam Masala & Dried Fenugreek Leaves');
+    items.push('Pure Ghee or Olive Oil');
+    items.push('Fresh Chopped Cilantro (for Garnish)');
+  } else if (qLower.includes('tikka') || qLower.includes('tandoori') || qLower.includes('kebab') || qLower.includes('roast')) {
+    icon = '🍢';
+    items.push('Thick Hung Greek Yogurt');
+    items.push('Roasted Chickpea Flour (Gram Flour)');
+    items.push('Cold-Pressed Mustard Oil');
+    items.push('Ginger-Garlic Paste & Lemon Juice');
+    items.push('Kashmiri Red Chilli Powder & Chaat Masala');
+    items.push('Diced Bell Peppers & Red Onions');
+    items.push('Melted Butter (for Basting)');
+  } else if (qLower.includes('fry') || qLower.includes('crispy') || qLower.includes('fritter')) {
+    icon = '🍤';
+    items.push('Cornstarch or Chickpea Flour Batter');
+    items.push('Carom Seeds (Ajwain) & Turmeric');
+    items.push('Chilli Powder & Sea Salt');
+    items.push('Vegetable Oil (for Deep Frying)');
+    items.push('Chaat Masala & Green Mint Chutney');
+  } else if (qLower.includes('soup') || qLower.includes('broth')) {
+    icon = '🥣';
+    items.push('Clear Vegetable or Chicken Broth Stock');
+    items.push('Minced Fresh Garlic & Ginger');
+    items.push('Butter or Extra Virgin Olive Oil');
+    items.push('Cornstarch (for Light Thickening)');
+    items.push('Crushed Black Pepper & Sea Salt');
+    items.push('Spring Onions & Fresh Herbs');
+  } else if (qLower.includes('shake') || qLower.includes('smoothie') || qLower.includes('juice')) {
+    icon = '🧋';
+    items.push('Chilled Whole Milk or Almond Milk');
+    items.push('Natural Honey or Cane Sugar');
+    items.push('Vanilla Ice Cream or Fresh Cream');
+    items.push('Crushed Ice Cubes');
+    items.push('Chopped Nuts (Almonds, Cashews & Walnuts)');
+  } else if (qLower.includes('cake') || qLower.includes('pastry') || qLower.includes('cookie') || qLower.includes('waffle')) {
+    icon = '🎂';
+    items.push('All-Purpose Flour');
+    items.push('Powdered Sugar');
+    items.push('Unsalted Butter');
+    items.push('Baking Powder & Baking Soda');
+    items.push('Whole Milk');
+    items.push('Pure Vanilla Extract');
+  } else if (qLower.includes('salad') || qLower.includes('bowl')) {
+    icon = '🥗';
+    items.push('Crisp Lettuce & Mixed Salad Greens');
+    items.push('Diced Cucumbers & Cherry Tomatoes');
+    items.push('Extra Virgin Olive Oil & Lemon Juice Dressing');
+    items.push('Sea Salt & Coarse Black Pepper');
+    items.push('Toasted Pumpkin / Sunflower Seeds');
+  } else if (qLower.includes('tacos') || qLower.includes('burrito') || qLower.includes('quesadilla')) {
+    icon = '🌮';
+    items.push('Tortilla Wraps (Corn or Flour)');
+    items.push('Shredded Cheddar / Monterey Jack Cheese');
+    items.push('Fresh Tomato Salsa');
+    items.push('Guacamole or Sliced Avocado');
+    items.push('Sour Cream');
+    items.push('Taco Seasoning & Lime Juice');
+  } else if (qLower.includes('noodles') || qLower.includes('pasta') || qLower.includes('ramen')) {
+    icon = '🍝';
+    items.push('Noodles or Pasta Pack');
+    items.push('Minced Garlic & Diced Onions');
+    items.push('Bell Peppers & Spring Onions');
+    items.push('Soy Sauce & Sesame Oil');
+    items.push('Crushed Black Pepper & Herbs');
+  } else {
+    items.push('Diced Onions & Fresh Tomatoes');
+    items.push('Ginger-Garlic Paste');
+    items.push('Pure Ghee or Extra Virgin Olive Oil');
+    items.push('Ground Spices (Cumin, Turmeric & Black Pepper)');
+    items.push('Sea Salt & Paprika');
+    items.push('Fresh Green Herbs (for Garnish)');
+  }
+
+  return {
+    recipe: {
+      key: 'ai_generated',
+      name: formattedName,
+      icon: icon,
+      items: items
+    },
+    userQuery: query,
+    isFuzzy: false,
+    isAIGenerated: true
+  };
+}
+
+// STORAGE FUNCTIONS
+function safeLoad(email){
+  try {
+    const raw = localStorage.getItem(getKey(email));
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return sanitizeTasks(parsed);
+    }
+    const legacy = localStorage.getItem('taskly_' + email.trim().toLowerCase());
+    if (legacy) {
+      const parsed = JSON.parse(legacy);
+      if (Array.isArray(parsed)) return sanitizeTasks(parsed);
+    }
+    return [];
+  } catch(e) {
+    return [];
+  }
+}
+
+function sanitizeTasks(rawTasks){
+  return rawTasks.map(t => ({
+    id: t.id || (Date.now() + Math.random()),
+    title: t.title || 'Untitled task',
+    done: !!t.done,
+    pinned: !!t.pinned,
+    priority: t.priority || 'none',
+    isRecipe: !!t.isRecipe,
+    dishName: t.dishName || '',
+    icon: t.icon || '🍳',
+    expanded: !!t.expanded,
+    items: Array.isArray(t.items) ? t.items.map(it => ({
+      id: it.id || (Date.now() + Math.random()),
+      title: it.title || '',
+      done: !!it.done
+    })) : [],
+    createdAt: t.createdAt || Date.now(),
+    completedAt: t.completedAt || null
+  }));
+}
+
+function save(){
+  if (!currentEmail) return;
+  try {
+    localStorage.setItem(getKey(currentEmail), JSON.stringify(tasks));
+    updateAccountsIndex(currentEmail, tasks.length);
+    showSavedIndicator();
+  } catch(e) {
+    console.error('Storage error:', e);
+  }
+}
+
+function showSavedIndicator(){
+  const status = $('syncStatus');
+  if (status) {
+    status.textContent = 'Saved just now';
+    setTimeout(() => { if (status) status.textContent = 'Saved locally'; }, 2000);
+  }
+}
+
+function showToast(message){
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<span>✓</span> <span>${message}</span>`;
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.remove(); }, 2500);
+}
+
+function getKnownAccounts(){
+  try {
+    const val = JSON.parse(localStorage.getItem(ACCOUNTS_INDEX_KEY) || '[]');
+    return Array.isArray(val) ? val : [];
+  } catch {
+    return [];
+  }
+}
+
+function updateAccountsIndex(email, count){
+  try {
+    const cleanEmail = email.trim().toLowerCase();
+    let accounts = getKnownAccounts().filter(a => (typeof a === 'string' ? a : a.email) !== cleanEmail);
+    accounts.unshift({ email: cleanEmail, count, lastSeen: Date.now() });
+    if (accounts.length > 8) accounts = accounts.slice(0, 8);
+    localStorage.setItem(ACCOUNTS_INDEX_KEY, JSON.stringify(accounts));
+  } catch {}
+}
+
+function renderRecentAccounts(){
+  const accounts = getKnownAccounts();
+  const container = $('recentList');
+  const section = $('recentAccountsSection');
+  container.innerHTML = '';
+  
+  if (!accounts.length) {
+    section.classList.add('hidden');
+    return;
+  }
+  
+  section.classList.remove('hidden');
+  accounts.forEach(acc => {
+    const emailStr = typeof acc === 'string' ? acc : acc.email;
+    const countStr = typeof acc === 'object' && typeof acc.count === 'number' ? `${acc.count} tasks` : 'Saved';
+    
+    const item = document.createElement('div');
+    item.className = 'recent-item';
+    item.innerHTML = `<span>${emailStr}</span><span class="recent-badge">${countStr}</span>`;
+    item.addEventListener('click', () => {
+      $('emailInput').value = emailStr;
+      enter(emailStr);
+    });
+    container.appendChild(item);
+  });
+}
+
+function enter(email){
+  currentEmail = email.trim().toLowerCase();
+  if (!currentEmail) return;
+
+  try {
+    localStorage.setItem(CURRENT_USER_KEY, currentEmail);
+    localStorage.setItem(LAST_USER_KEY, currentEmail);
+  } catch {}
+
+  tasks = safeLoad(currentEmail);
+  filter = 'all';
+  section = 'all';
+  searchTerm = '';
+
+  $('searchInput').value = '';
+  const displayEmail = currentEmail === 'guest@local' ? 'Guest User' : currentEmail;
+  const avatarLetter = currentEmail === 'guest@local' ? 'G' : (currentEmail[0] || 'U').toUpperCase();
+  if ($('userEmail')) $('userEmail').textContent = displayEmail;
+  if ($('avatar')) $('avatar').textContent = avatarLetter;
+  if ($('headerUserEmail')) $('headerUserEmail').textContent = displayEmail;
+  if ($('headerAvatar')) $('headerAvatar').textContent = avatarLetter;
+
+  $('loginScreen').classList.add('hidden');
+  $('app').classList.remove('hidden');
+
+  navigateTo('tasks', false);
+  setActiveNav();
+  render();
+}
+
+function logout(){
+  try {
+    localStorage.removeItem(CURRENT_USER_KEY);
+  } catch {}
+
+  currentEmail = '';
+  tasks = [];
+  $('app').classList.add('hidden');
+  $('loginScreen').classList.remove('hidden');
+  
+  const lastEmail = localStorage.getItem(LAST_USER_KEY) || '';
+  if (lastEmail && lastEmail !== 'guest@local') {
+    $('emailInput').value = lastEmail;
+  } else {
+    $('emailInput').value = '';
+  }
+
+  renderRecentAccounts();
+}
+
+function dateTime(value){
+  if (!value) return '';
+  return new Intl.DateTimeFormat(undefined, {
+    day:'2-digit', month:'short', year:'numeric', hour:'numeric', minute:'2-digit'
+  }).format(new Date(value));
+}
+
+function setActiveNav(){
+  document.querySelectorAll('[data-section]').forEach(b => {
+    b.classList.toggle('active', b.dataset.section === section);
+  });
+  const titles = {
+    all: 'My tasks',
+    pinned: 'Important Tasks',
+    today: 'Added Today'
+  };
+  $('listTitle').childNodes[0].textContent = (titles[section] || 'My tasks') + ' ';
+}
+
+// FILTER & SORT: TICKED ITEMS AUTOMATICALLY MOVE TO BOTTOM
+function filteredTasks(){
+  const todayDateString = new Date().toDateString();
+  const list = tasks.filter(t => {
+    const matchFilter = filter === 'all' || (filter === 'active' && !t.done) || (filter === 'done' && t.done);
+    let matchSection = true;
+
+    if (section === 'pinned') matchSection = !!t.pinned;
+    else if (section === 'today') matchSection = new Date(t.createdAt).toDateString() === todayDateString;
+
+    const matchSearch = (t.title || '').toLowerCase().includes(searchTerm) || (t.dishName || '').toLowerCase().includes(searchTerm);
+    return matchFilter && matchSection && matchSearch;
+  });
+
+  // SORT: Incomplete first, Completed tasks at the very bottom!
+  list.sort((a, b) => {
+    if (a.done !== b.done) {
+      return a.done ? 1 : -1;
+    }
+    if (a.pinned !== b.pinned) {
+      return a.pinned ? -1 : 1;
+    }
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
+
+  return list;
+}
+
+function getDailyMessage(date){
+  const messages = [
+    'A fresh week, a fresh chance to get things done.',
+    'Make today a small step toward something big.',
+    'Stay consistent. Your daily effort builds great things.',
+    'One task at a time — keep moving forward.',
+    'You’ve got this. Turn today’s plans into progress.',
+    'Take a breath, find your focus, and make it count.',
+    'Celebrate small wins. Every completed task matters.'
+  ];
+  return messages[date.getDay()];
+}
+
+function updateBadges(){
+  const todayStr = new Date().toDateString();
+  const allCount = tasks.length;
+  const pinnedCount = tasks.filter(t => t.pinned).length;
+  const todayCount = tasks.filter(t => new Date(t.createdAt).toDateString() === todayStr).length;
+  const recipeCount = tasks.filter(t => t.isRecipe).length;
+
+  if ($('badgeAll')) $('badgeAll').textContent = allCount;
+  if ($('badgePinned')) $('badgePinned').textContent = pinnedCount;
+  if ($('badgeToday')) $('badgeToday').textContent = todayCount;
+  if ($('badgeRecipe')) $('badgeRecipe').textContent = recipeCount;
+
+  if ($('mBadgeAll')) $('mBadgeAll').textContent = allCount;
+  if ($('mBadgePinned')) $('mBadgePinned').textContent = pinnedCount;
+  if ($('mBadgeToday')) $('mBadgeToday').textContent = todayCount;
+  if ($('mBadgeRecipe')) $('mBadgeRecipe').textContent = recipeCount;
+}
+
+function render(){
+  const total = tasks.length;
+  const done = tasks.filter(t => t.done).length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+
+  $('progressNum').textContent = pct + '%';
+  $('progressFill').style.width = pct + '%';
+  $('progressText').textContent = total 
+    ? (done === total ? 'Everything is done. Amazing work! 🎉' : `${done} of ${total} tasks completed. Keep it going!`)
+    : "You're just getting started. Let's do this!";
+
+  const now = new Date();
+  $('todayLabel').textContent = new Intl.DateTimeFormat(undefined, {
+    weekday: 'long', month: 'long', day: 'numeric'
+  }).format(now).toUpperCase();
+  $('dailyMessage').textContent = getDailyMessage(now);
+
+  updateBadges();
+
+  const visible = filteredTasks();
+  $('taskCount').textContent = `(${visible.length})`;
+
+  if (done > 0) {
+    $('clearDoneBtn').classList.remove('hidden');
+    $('clearDoneBtn').textContent = `Clear Completed (${done})`;
+  } else {
+    $('clearDoneBtn').classList.add('hidden');
+  }
+
+  document.querySelectorAll('[data-filter]').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === filter);
+  });
+
+  renderTaskList(visible);
+}
+
+function renderTaskList(visible){
+  const root = $('tasks');
+  root.replaceChildren();
+
+  if (!visible.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    const icon = document.createElement('div');
+    icon.className = 'empty-icon';
+    icon.textContent = filter === 'done' ? '✨' : searchTerm ? '🔍' : '📝';
+    const msg = document.createElement('div');
+    msg.textContent = searchTerm 
+      ? 'No matching tasks found.' 
+      : filter === 'done' 
+        ? 'No completed tasks yet.' 
+        : 'Nothing here yet. Add your first task or generate a recipe checklist!';
+    empty.append(icon, msg);
+    root.append(empty);
+    return;
+  }
+
+  visible.forEach(task => {
+    if (task.isRecipe) {
+      root.appendChild(createRecipeCardElement(task));
+    } else {
+      root.appendChild(createNormalTaskElement(task));
+    }
+  });
+}
+
+function createNormalTaskElement(task){
+  const row = document.createElement('div');
+  row.className = 'task' + (task.done ? ' done' : '');
+
+  const check = document.createElement('button');
+  check.className = 'check';
+  check.textContent = task.done ? '✓' : '';
+  check.setAttribute('aria-label', task.done ? 'Mark active' : 'Complete task');
+  check.addEventListener('click', () => {
+    task.done = !task.done;
+    task.completedAt = task.done ? Date.now() : null;
+    save();
+    render();
+    if (task.done) showToast('Task completed! Moved to the bottom ⬇');
+  });
+
+  const body = document.createElement('div');
+  body.className = 'task-body';
+
+  const title = document.createElement('div');
+  title.className = 'task-title';
+  title.textContent = task.title;
+  body.append(title);
+
+  if (task.priority && task.priority !== 'none') {
+    const pills = document.createElement('div');
+    pills.className = 'task-pills';
+    const priorityTag = document.createElement('span');
+    priorityTag.className = 'tag tag-' + task.priority;
+    priorityTag.textContent = task.priority === 'high' ? 'High 🔴' : task.priority === 'medium' ? 'Medium 🟡' : 'Low 🟢';
+    pills.append(priorityTag);
+    body.append(pills);
+  }
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  const added = document.createElement('span');
+  added.textContent = 'Added: ' + dateTime(task.createdAt);
+  meta.append(added);
+
+  if (task.done && task.completedAt) {
+    const completed = document.createElement('span');
+    completed.className = 'completed';
+    completed.textContent = 'Done: ' + dateTime(task.completedAt);
+    meta.append(completed);
+  }
+
+  const actions = document.createElement('div');
+  actions.className = 'task-actions';
+
+  const pin = document.createElement('button');
+  pin.className = 'icon-btn' + (task.pinned ? ' pinned' : '');
+  pin.textContent = task.pinned ? '★' : '☆';
+  pin.title = task.pinned ? 'Unmark important' : 'Mark important';
+  pin.addEventListener('click', () => {
+    task.pinned = !task.pinned;
+    save();
+    render();
+  });
+
+  const edit = document.createElement('button');
+  edit.className = 'icon-btn edit';
+  edit.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+  edit.title = 'Edit task';
+  edit.addEventListener('click', () => openEditDialog(task));
+
+  const del = document.createElement('button');
+  del.className = 'icon-btn delete';
+  del.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>';
+  del.title = 'Delete task';
+  del.addEventListener('click', () => openDeleteDialog(task.id));
+
+  actions.append(pin, edit, del);
+  row.append(check, body, meta, actions);
+  return row;
+}
+
+// SPECIAL RECIPE CARD (EXPANDABLE INNER CHECKLIST)
+function createRecipeCardElement(task){
+  const card = document.createElement('div');
+  card.className = 'recipe-card' + (task.done ? ' done' : '');
+
+  const totalItems = task.items.length;
+  const doneItems = task.items.filter(i => i.done).length;
+
+  const header = document.createElement('div');
+  header.className = 'recipe-card-header';
+
+  const iconEl = document.createElement('div');
+  iconEl.className = 'recipe-dish-icon';
+  iconEl.textContent = task.icon || '🍳';
+
+  const infoEl = document.createElement('div');
+  infoEl.className = 'recipe-card-info';
+
+  const titleEl = document.createElement('div');
+  titleEl.className = 'recipe-card-title';
+  titleEl.innerHTML = `<span>${task.dishName}</span> <span class="recipe-progress-badge ${doneItems === totalItems ? 'all-done' : ''}">${doneItems}/${totalItems} Done</span>`;
+
+  const subEl = document.createElement('div');
+  subEl.className = 'recipe-card-sub';
+  subEl.textContent = doneItems === totalItems ? 'All ingredients ready! Ready to cook 🎉' : 'Click to view & check off ingredients';
+
+  infoEl.append(titleEl, subEl);
+
+  const controlsEl = document.createElement('div');
+  controlsEl.className = 'recipe-header-controls';
+
+  const expandBtn = document.createElement('button');
+  expandBtn.type = 'button';
+  expandBtn.className = 'recipe-expand-btn';
+  expandBtn.innerHTML = task.expanded ? '▲ Close' : '▼ View';
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'icon-btn delete';
+  delBtn.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>';
+  delBtn.title = 'Delete recipe';
+  delBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openDeleteDialog(task.id);
+  });
+
+  controlsEl.append(expandBtn, delBtn);
+  header.append(iconEl, infoEl, controlsEl);
+  card.append(header);
+
+  header.addEventListener('click', () => {
+    task.expanded = !task.expanded;
+    save();
+    render();
+  });
+
+  // INNER INGREDIENTS LIST
+  if (task.expanded) {
+    const checklist = document.createElement('div');
+    checklist.className = 'recipe-inner-checklist';
+
+    // Sort inner items: unchecked first, checked at the bottom!
+    const sortedItems = [...task.items].sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
+
+    sortedItems.forEach(item => {
+      const itemRow = document.createElement('label');
+      itemRow.className = 'recipe-inner-item' + (item.done ? ' done' : '');
+
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.className = 'recipe-inner-check';
+      chk.checked = !!item.done;
+
+      chk.addEventListener('change', () => {
+        item.done = chk.checked;
+        const allDone = task.items.every(i => i.done);
+        task.done = allDone;
+        task.completedAt = allDone ? Date.now() : null;
+        save();
+        render();
+        if (chk.checked) showToast(`"${item.title}" completed! Moved to bottom ⬇`);
+      });
+
+      const labelText = document.createElement('span');
+      labelText.textContent = item.title;
+
+      itemRow.append(chk, labelText);
+      checklist.append(itemRow);
+    });
+
+    card.append(checklist);
+  }
+
+  return card;
+}
+
+// -------------------------------------------------------------
+// NAVIGATION & BACK HANDLING (PHONE BUTTON, TRACKPAD, MOUSE)
+// -------------------------------------------------------------
+function navigateTo(view, pushHistory = true) {
+  if (currentView === view && pushHistory) return;
+  currentView = view;
+
+  if (view === 'recipe') {
+    $('mainTasksView').classList.add('hidden');
+    $('recipeStudioView').classList.remove('hidden');
+    $('sidebarRecipeBtn').classList.add('active');
+    $('aiDishInput').focus();
+    if (pushHistory) {
+      history.pushState({ view: 'recipe' }, '', '#recipe');
+    }
+  } else {
+    $('recipeStudioView').classList.add('hidden');
+    $('mainTasksView').classList.remove('hidden');
+    $('sidebarRecipeBtn').classList.remove('active');
+    setActiveNav();
+    if (pushHistory && location.hash === '#recipe') {
+      history.replaceState({ view: 'tasks' }, '', '#tasks');
+    }
+  }
+}
+
+// UNIVERSAL BACK HANDLER
+function handleGoBack() {
+  if (!$('deleteDialog').classList.contains('hidden')) {
+    closeDeleteDialog();
+    return true;
+  }
+  if (!$('editDialog').classList.contains('hidden')) {
+    closeEditDialog();
+    return true;
+  }
+  if (currentView === 'recipe') {
+    if (history.state && history.state.view === 'recipe') {
+      history.back();
+    } else {
+      navigateTo('tasks', false);
+    }
+    return true;
+  }
+  return false;
+}
+
+// 1. BROWSER POPSTATE (PHONE HARDWARE BACK BUTTON & BROWSER GESTURES)
+window.addEventListener('popstate', (e) => {
+  if (e.state && e.state.view === 'recipe') {
+    navigateTo('recipe', false);
+  } else {
+    if (!$('deleteDialog').classList.contains('hidden')) closeDeleteDialog();
+    if (!$('editDialog').classList.contains('hidden')) closeEditDialog();
+    navigateTo('tasks', false);
+  }
+});
+
+// 2. PC / LAPTOP MOUSE BACK BUTTON (Button 3 = XBUTTON1)
+window.addEventListener('mouseup', (e) => {
+  if (e.button === 3) {
+    e.preventDefault();
+    handleGoBack();
+  }
+});
+
+// 3. TRACKPAD & TOUCH SWIPE RIGHT GESTURE (PHONE & LAPTOPS)
+let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+window.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchStartTime = Date.now();
+  }
+}, { passive: true });
+
+window.addEventListener('touchend', (e) => {
+  if (!touchStartX) return;
+  const touchEndX = e.changedTouches[0].clientX;
+  const touchEndY = e.changedTouches[0].clientY;
+  const diffX = touchEndX - touchStartX;
+  const diffY = touchEndY - touchStartY;
+  const duration = Date.now() - touchStartTime;
+
+  if (diffX > 75 && Math.abs(diffY) < 70 && duration < 600) {
+    if (currentView === 'recipe' || !$('deleteDialog').classList.contains('hidden') || !$('editDialog').classList.contains('hidden')) {
+      handleGoBack();
+    }
+  }
+  touchStartX = 0;
+  touchStartY = 0;
+}, { passive: true });
+
+// 4. KEYBOARD SHORTCUTS (Escape, Alt + Left Arrow)
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    handleGoBack();
+  } else if (e.altKey && e.key === 'ArrowLeft') {
+    e.preventDefault();
+    handleGoBack();
+  }
+});
+
+// BUTTON CLICK NAVIGATION
+$('openRecipeStudioBtn').addEventListener('click', () => {
+  navigateTo('recipe');
+  generateAIRecipe('pizza');
+});
+
+$('sidebarRecipeBtn').addEventListener('click', () => {
+  navigateTo('recipe');
+  generateAIRecipe('pizza');
+});
+
+$('backToTasksBtn').addEventListener('click', () => {
+  handleGoBack();
+});
+
+// AI RECIPE GENERATOR (INSTANT + UNLIMITED HEURISTIC + LIVE ONLINE AI ENHANCER)
+async function generateAIRecipe(queryText){
+  const text = queryText || $('aiDishInput').value.trim();
+  if (!text) return;
+
+  const result = generateUnlimitedAIRecipe(text);
+  currentAIResult = result;
+
+  renderAIResultInStudio(result);
+
+  // Background live LLM fetch
+  try {
+    const onlinePrompt = encodeURIComponent(`List 7-9 specific cooking ingredients for dish "${text}" as a JSON array of strings in English (e.g. ["Mozzarella Cheese", "Tomato Sauce", "Bell Peppers"]). Return valid JSON array only.`);
+    const res = await fetch(`https://text.pollinations.ai/${onlinePrompt}`, { signal: AbortSignal.timeout(3500) });
+    if (res.ok) {
+      const txt = await res.text();
+      const match = txt.match(/\[[\s\S]*?\]/);
+      if (match) {
+        const liveItems = JSON.parse(match[0]);
+        if (Array.isArray(liveItems) && liveItems.length >= 3) {
+          result.recipe.items = liveItems.map(i => String(i).replace(/^[-*•\d.]+\s*/, '').trim());
+          renderAIResultInStudio(result);
+        }
+      }
+    }
+  } catch(e) {
+    // Offline or slow network — local AI already rendered seamlessly!
+  }
+}
+
+function renderAIResultInStudio(result){
+  const bannerText = $('aiMatchedText');
+  const bannerNote = $('aiMatchedNote');
+
+  if (result.isFuzzy) {
+    bannerText.innerHTML = `✨ Recipe: <strong>${result.recipe.icon} ${result.recipe.name}</strong>`;
+    bannerNote.textContent = `Auto-corrected from "${result.userQuery}" • ${result.recipe.items.length} ingredients`;
+  } else if (result.isAIGenerated) {
+    bannerText.innerHTML = `✨ Recipe: <strong>${result.recipe.icon} ${result.recipe.name}</strong>`;
+    bannerNote.textContent = `Generated for "${result.userQuery}" • ${result.recipe.items.length} ingredients`;
+  } else {
+    bannerText.innerHTML = `✨ Recipe: <strong>${result.recipe.icon} ${result.recipe.name}</strong>`;
+    bannerNote.textContent = `${result.recipe.items.length} ingredients ready`;
+  }
+
+  const grid = $('studioIngredientsGrid');
+  grid.innerHTML = '';
+
+  result.recipe.items.forEach((item, idx) => {
+    const label = document.createElement('label');
+    label.className = 'studio-ingredient-item';
+    label.innerHTML = `
+      <input type="checkbox" checked value="${item}" id="studio_ing_${idx}">
+      <span>${item}</span>
+    `;
+    grid.appendChild(label);
+  });
+
+  updateStudioSelectionCount();
+}
+
+function updateStudioSelectionCount(){
+  const total = document.querySelectorAll('#studioIngredientsGrid input').length;
+  const checked = document.querySelectorAll('#studioIngredientsGrid input:checked').length;
+  $('studioSelectionCount').textContent = `Selected ${checked} of ${total} items`;
+}
+
+// REALTIME DEBOUNCED SEARCH AS USER TYPES
+let searchTimer = null;
+$('aiDishInput').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  const query = e.target.value.trim();
+  if (query.length >= 2) {
+    searchTimer = setTimeout(() => {
+      generateAIRecipe(query);
+    }, 280);
+  }
+});
+
+$('aiGenerateBtn').addEventListener('click', () => {
+  generateAIRecipe($('aiDishInput').value.trim());
+});
+
+$('studioIngredientsGrid').addEventListener('change', updateStudioSelectionCount);
+
+// ADD EXTRA CUSTOM INGREDIENT IN STUDIO
+$('addCustomIngBtn').addEventListener('click', () => {
+  const input = $('customIngInput');
+  const val = input.value.trim();
+  if (!val || !currentAIResult) return;
+
+  currentAIResult.recipe.items.push(val);
+  const grid = $('studioIngredientsGrid');
+  const label = document.createElement('label');
+  label.className = 'studio-ingredient-item';
+  label.innerHTML = `
+    <input type="checkbox" checked value="${val}">
+    <span>${val}</span>
+  `;
+  grid.appendChild(label);
+  input.value = '';
+  updateStudioSelectionCount();
+  showToast(`"${val}" added!`);
+});
+
+// ADD RECIPE TO MAIN TASKS AS A RECIPE CARD WITH SUB-ITEMS
+$('studioAddTasksBtn').addEventListener('click', () => {
+  if (!currentAIResult) return;
+
+  const checkedInputs = Array.from(document.querySelectorAll('#studioIngredientsGrid input:checked'));
+  if (!checkedInputs.length) {
+    alert('Please select at least one ingredient.');
+    return;
+  }
+
+  const itemsList = checkedInputs.map(input => ({
+    id: Date.now() + Math.random(),
+    title: input.value,
+    done: false
+  }));
+
+  const recipeTask = {
+    id: Date.now() + Math.random(),
+    title: `${currentAIResult.recipe.icon} ${currentAIResult.recipe.name} (Recipe Checklist)`,
+    dishName: currentAIResult.recipe.name,
+    icon: currentAIResult.recipe.icon,
+    isRecipe: true,
+    expanded: true,
+    done: false,
+    pinned: false,
+    priority: 'none',
+    items: itemsList,
+    createdAt: Date.now(),
+    completedAt: null
+  };
+
+  tasks.unshift(recipeTask);
+  save();
+  render();
+  handleGoBack();
+  showToast(`"${currentAIResult.recipe.name}" added to tasks!`);
+});
+
+// EDIT MODAL LOGIC
+function openEditDialog(task){
+  pendingEditId = task.id;
+  $('editTitleInput').value = task.title;
+  $('editPrioritySelect').value = task.priority || 'none';
+  $('editDialog').classList.remove('hidden');
+  $('editTitleInput').focus();
+}
+
+function closeEditDialog(){
+  pendingEditId = null;
+  $('editDialog').classList.add('hidden');
+}
+
+$('editForm').addEventListener('submit', e => {
+  e.preventDefault();
+  if (!pendingEditId) return;
+  const task = tasks.find(t => t.id === pendingEditId);
+  if (task) {
+    task.title = $('editTitleInput').value.trim();
+    task.priority = $('editPrioritySelect').value;
+    save();
+    render();
+    showToast('Task updated successfully!');
+  }
+  closeEditDialog();
+});
+
+$('cancelEdit').addEventListener('click', closeEditDialog);
+$('editDialog').addEventListener('click', e => {
+  if (e.target === $('editDialog')) closeEditDialog();
+});
+
+// DELETE DIALOG LOGIC
+function openDeleteDialog(id){
+  pendingDeleteId = id;
+  $('deleteDialog').classList.remove('hidden');
+  $('cancelDelete').focus();
+}
+
+function closeDeleteDialog(){
+  pendingDeleteId = null;
+  $('deleteDialog').classList.add('hidden');
+}
+
+function confirmTaskDelete(){
+  if (pendingDeleteId === null) return;
+  tasks = tasks.filter(t => t.id !== pendingDeleteId);
+  save();
+  closeDeleteDialog();
+  render();
+  showToast('Item deleted.');
+}
+
+$('cancelDelete').addEventListener('click', closeDeleteDialog);
+$('confirmDelete').addEventListener('click', confirmTaskDelete);
+$('deleteDialog').addEventListener('click', e => {
+  if (e.target === $('deleteDialog')) closeDeleteDialog();
+});
+
+// CLEAR COMPLETED
+$('clearDoneBtn').addEventListener('click', () => {
+  if (confirm('Are you sure you want to remove all completed tasks?')) {
+    tasks = tasks.filter(t => !t.done);
+    save();
+    render();
+    showToast('Completed tasks cleared.');
+  }
+});
+
+// EXPORT BACKUP
+$('exportBtn').addEventListener('click', () => {
+  const data = {
+    email: currentEmail,
+    exportedAt: new Date().toISOString(),
+    tasks: tasks
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `taskly_backup_${currentEmail.replace(/[^a-z0-9]/gi,'_')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// DARK MODE & THEME CONTROLS ACROSS ALL SCREENS
+function updateThemeUI(isDark){
+  const labelFull = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+  const labelCompact = isDark ? 'Light' : 'Dark';
+  const icon = isDark ? '☀️' : '🌙';
+
+  if ($('themeLabel')) $('themeLabel').textContent = labelFull;
+  if ($('headerThemeBtn')) $('headerThemeBtn').innerHTML = `<span class="h-theme-icon">${icon}</span> <span class="h-theme-text">${labelFull}</span>`;
+  if ($('mobileThemeBtn')) $('mobileThemeBtn').innerHTML = `<span class="m-theme-icon">${icon}</span> <span class="m-theme-text">${labelCompact}</span>`;
+  if ($('loginThemeBtn')) $('loginThemeBtn').innerHTML = `<span class="theme-icon">${icon}</span> <span class="theme-text">${labelFull}</span>`;
+}
+
+function initTheme(){
+  const saved = localStorage.getItem(THEME_KEY);
+  const isDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  if (isDark) {
+    document.body.classList.add('dark');
+  } else {
+    document.body.classList.remove('dark');
+  }
+  updateThemeUI(isDark);
+}
+
+function toggleTheme(){
+  const isDark = document.body.classList.toggle('dark');
+  localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+  updateThemeUI(isDark);
+}
+
+// Bind all theme toggles
+if ($('themeToggle')) $('themeToggle').addEventListener('click', toggleTheme);
+if ($('headerThemeBtn')) $('headerThemeBtn').addEventListener('click', toggleTheme);
+if ($('mobileThemeBtn')) $('mobileThemeBtn').addEventListener('click', toggleTheme);
+if ($('loginThemeBtn')) $('loginThemeBtn').addEventListener('click', toggleTheme);
+
+// Bind all logout buttons
+if ($('logoutBtn')) $('logoutBtn').addEventListener('click', logout);
+if ($('headerLogoutBtn')) $('headerLogoutBtn').addEventListener('click', logout);
+if ($('mobileLogoutBtn')) $('mobileLogoutBtn').addEventListener('click', logout);
+
+// Bind mobile recipe pill
+if ($('mobileRecipePill')) $('mobileRecipePill').addEventListener('click', () => {
+  navigateTo('recipe');
+});
+
+// ADD TASK FORM
+$('newTaskBtn').addEventListener('click', () => {
+  const form = $('taskForm');
+  form.hidden = !form.hidden;
+  if (!form.hidden) {
+    $('taskInput').focus();
+  }
+});
+
+$('cancelAddBtn').addEventListener('click', () => {
+  $('taskForm').hidden = true;
+});
+
+$('taskForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const title = $('taskInput').value.trim();
+  if (!title) return;
+
+  const priority = $('taskPriority').value;
+
+  tasks.unshift({
+    id: Date.now() + Math.random(),
+    title,
+    done: false,
+    pinned: false,
+    priority,
+    isRecipe: false,
+    createdAt: Date.now(),
+    completedAt: null
+  });
+
+  save();
+  $('taskInput').value = '';
+  $('taskPriority').value = 'none';
+  $('taskForm').hidden = true;
+  render();
+  showToast('New task added!');
+});
+
+// SEARCH & FILTERS
+$('searchInput').addEventListener('input', e => {
+  searchTerm = e.target.value.trim().toLowerCase();
+  render();
+});
+
+document.querySelectorAll('[data-filter]').forEach(b => {
+  b.addEventListener('click', () => {
+    filter = b.dataset.filter;
+    render();
+  });
+});
+
+document.querySelectorAll('[data-section]').forEach(b => {
+  b.addEventListener('click', () => {
+    section = b.dataset.section;
+    filter = 'all';
+    setActiveNav();
+    render();
+  });
+});
+
+// LOGIN & GUEST
+$('loginForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const value = $('emailInput').value.trim();
+  if (value) enter(value);
+});
+
+$('guestBtn').addEventListener('click', () => {
+  enter('guest@local');
+});
+
+$('logoutBtn').addEventListener('click', logout);
+
+// INITIALIZE APP
+initTheme();
+renderRecentAccounts();
+
+try {
+  const activeUser = localStorage.getItem(CURRENT_USER_KEY);
+  if (activeUser) {
+    enter(activeUser);
+  } else {
+    const lastUser = localStorage.getItem(LAST_USER_KEY);
+    if (lastUser && lastUser !== 'guest@local') {
+      $('emailInput').value = lastUser;
+    }
+  }
+} catch(e) {
+  console.warn(e);
+}
+</script>
+</body>
+</html>
