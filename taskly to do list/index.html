@@ -1822,8 +1822,89 @@ main{
   display:none;
 }
 @media(max-width:768px){
+  .mobile-app-bar{
+    display:flex!important;
+    flex-direction:column;
+    padding:10px 14px;
+    background:var(--paper-card);
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+    gap:8px;
+    z-index:20;
+  }
+  .mobile-bar-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+  }
+  .mobile-user-strip{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--paper);
+    padding:6px 10px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    font-size:12px;
+  }
+  .m-user-avatar{
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    background:var(--purple);
+    color:white;
+    font-size:10.5px;
+    font-weight:800;
+    display:grid;
+    place-items:center;
+    flex-shrink:0;
+  }
+  .m-user-email{
+    font-weight:700;
+    color:var(--ink);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    flex:1;
+    min-width:0;
+    font-size:12px;
+  }
+  .m-sync-badge{
+    font-size:10px;
+    color:var(--green);
+    font-weight:700;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
   .header-right-tools{
-    display:none;
+    display:flex!important;
+    align-items:center;
+    width:100%;
+    margin-top:6px;
+  }
+  .header-right-tools .theme-toggle-btn,
+  .header-right-tools .logout-btn{
+    display:none; /* Buttons are in the top mobile-app-bar */
+  }
+  .header-user-badge{
+    display:inline-flex!important;
+    align-items:center;
+    gap:8px;
+    padding:6px 12px 6px 8px;
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink);
+    max-width:100%;
+  }
+  .user-email-text{
+    max-width:220px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
   }
   .m-action-btn{
     display:inline-flex;
@@ -1986,16 +2067,23 @@ main{
   <main>
     <!-- MOBILE TOP APP BAR -->
     <div class="mobile-app-bar">
-      <div class="mobile-brand">
-        <span class="brand-icon">✓</span> taskly
+      <div class="mobile-bar-top">
+        <div class="mobile-brand">
+          <span class="brand-icon">✓</span> taskly
+        </div>
+        <div class="mobile-actions">
+          <button class="m-action-btn theme-toggle-btn" id="mobileThemeBtn" type="button" title="Toggle Theme">
+            <span class="m-theme-icon">🌙</span> <span class="m-theme-text">Dark</span>
+          </button>
+          <button class="m-action-btn logout-btn" id="mobileLogoutBtn" type="button" title="Log out">
+            <span>↪</span> <span>Logout</span>
+          </button>
+        </div>
       </div>
-      <div class="mobile-actions">
-        <button class="m-action-btn theme-toggle-btn" id="mobileThemeBtn" type="button" title="Toggle Theme">
-          <span class="m-theme-icon">🌙</span> <span class="m-theme-text">Dark</span>
-        </button>
-        <button class="m-action-btn logout-btn" id="mobileLogoutBtn" type="button" title="Log out">
-          <span>↪</span> <span>Logout</span>
-        </button>
+      <div class="mobile-user-strip">
+        <span class="m-user-avatar" id="mobileAvatar">U</span>
+        <span class="m-user-email" id="mobileUserEmail">user@email.com</span>
+        <span class="m-sync-badge">● Saved locally</span>
       </div>
     </div>
 
