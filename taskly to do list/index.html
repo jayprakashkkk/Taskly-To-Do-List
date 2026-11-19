@@ -1824,58 +1824,32 @@ main{
 @media(max-width:768px){
   .mobile-app-bar{
     display:flex!important;
-    flex-direction:column;
-    padding:10px 14px;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 16px;
     background:var(--paper-card);
     border-bottom:1px solid var(--line);
     flex-shrink:0;
-    gap:8px;
     z-index:20;
   }
-  .mobile-bar-top{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    width:100%;
-  }
-  .mobile-user-strip{
+  .mobile-brand{
     display:flex;
     align-items:center;
     gap:8px;
-    background:var(--paper);
-    padding:6px 10px;
-    border-radius:12px;
-    border:1px solid var(--line);
-    font-size:12px;
-  }
-  .m-user-avatar{
-    width:22px;
-    height:22px;
-    border-radius:50%;
-    background:var(--purple);
-    color:white;
-    font-size:10.5px;
-    font-weight:800;
-    display:grid;
-    place-items:center;
-    flex-shrink:0;
-  }
-  .m-user-email{
-    font-weight:700;
+    font:800 18px Manrope,sans-serif;
+    letter-spacing:-.5px;
     color:var(--ink);
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-    flex:1;
-    min-width:0;
-    font-size:12px;
   }
-  .m-sync-badge{
-    font-size:10px;
-    color:var(--green);
-    font-weight:700;
-    white-space:nowrap;
-    flex-shrink:0;
+  .mobile-brand .brand-icon{
+    width:28px;
+    height:28px;
+    font-size:15px;
+    border-radius:8px;
+  }
+  .mobile-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
   }
   .header-right-tools{
     display:flex!important;
@@ -2067,23 +2041,16 @@ main{
   <main>
     <!-- MOBILE TOP APP BAR -->
     <div class="mobile-app-bar">
-      <div class="mobile-bar-top">
-        <div class="mobile-brand">
-          <span class="brand-icon">✓</span> taskly
-        </div>
-        <div class="mobile-actions">
-          <button class="m-action-btn theme-toggle-btn" id="mobileThemeBtn" type="button" title="Toggle Theme">
-            <span class="m-theme-icon">🌙</span> <span class="m-theme-text">Dark</span>
-          </button>
-          <button class="m-action-btn logout-btn" id="mobileLogoutBtn" type="button" title="Log out">
-            <span>↪</span> <span>Logout</span>
-          </button>
-        </div>
+      <div class="mobile-brand">
+        <span class="brand-icon">✓</span> taskly
       </div>
-      <div class="mobile-user-strip">
-        <span class="m-user-avatar" id="mobileAvatar">U</span>
-        <span class="m-user-email" id="mobileUserEmail">user@email.com</span>
-        <span class="m-sync-badge">● Saved locally</span>
+      <div class="mobile-actions">
+        <button class="m-action-btn theme-toggle-btn" id="mobileThemeBtn" type="button" title="Toggle Theme">
+          <span class="m-theme-icon">🌙</span> <span class="m-theme-text">Dark</span>
+        </button>
+        <button class="m-action-btn logout-btn" id="mobileLogoutBtn" type="button" title="Log out">
+          <span>↪</span> <span>Logout</span>
+        </button>
       </div>
     </div>
 
