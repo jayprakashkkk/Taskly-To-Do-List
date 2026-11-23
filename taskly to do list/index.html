@@ -2802,6 +2802,7 @@ function sanitizeTasks(rawTasks){
       done: !!it.done
     })) : [],
     createdAt: t.createdAt || Date.now(),
+    updatedAt: t.updatedAt || t.completedAt || t.createdAt || Date.now(),
     completedAt: t.completedAt || null
   }));
 }
@@ -2851,28 +2852,7 @@ function updateSyncIndicators(state){
   }
 }
 
-// Smart merging by task ID & timestamp so changes on both devices are preserved
-function mergeTasks(localList, cloudList){
-  const map = new Map();
-  for (const t of cloudList) {
-    if (t && t.id != null) map.set(String(t.id), t);
-  }
-  for (const t of localList) {
-    if (!t || t.id == null) continue;
-    const key = String(t.id);
-    if (!map.has(key)) {
-      map.set(key, t);
-    } else {
-      const existing = map.get(key);
-      const localTime = t.updatedAt || t.createdAt || 0;
-      const cloudTime = existing.updatedAt || existing.createdAt || 0;
-      if (localTime >= cloudTime) {
-        map.set(key, t);
-      }
-    }
-  }
-  return Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-}
+let hasDirtyLocalChanges = false;
 
 // Push local tasks to Cloud API
 async function pushToCloud(email, taskList){
@@ -2885,6 +2865,7 @@ async function pushToCloud(email, taskList){
       body: JSON.stringify({ email, tasks: cleanTasks })
     });
     if (!res.ok) throw new Error('Sync failed with status ' + res.status);
+    hasDirtyLocalChanges = false;
     lastSyncedJson = JSON.stringify(cleanTasks);
     updateSyncIndicators('synced');
   } catch (err) {
@@ -2893,15 +2874,15 @@ async function pushToCloud(email, taskList){
   }
 }
 
-// Fetch tasks from Cloud API and merge/sync
+// Fetch tasks from Cloud API (Cloud acts as master source across devices)
 async function syncFromCloud(email, isSilent = false){
   if (!email || email === 'guest@local') return;
-  if (isSyncing) return;
+  if (isSyncing || hasDirtyLocalChanges) return;
   isSyncing = true;
   if (!isSilent) updateSyncIndicators('syncing');
 
   try {
-    const res = await fetch(`${SYNC_API_BASE}/api/sync?email=${encodeURIComponent(email)}`, {
+    const res = await fetch(`${SYNC_API_BASE}/api/sync?email=${encodeURIComponent(email)}&t=${Date.now()}`, {
       method: 'GET',
       headers: { 'Cache-Control': 'no-cache' }
     });
@@ -2911,13 +2892,12 @@ async function syncFromCloud(email, isSilent = false){
 
     if (data && data.exists && Array.isArray(data.tasks)) {
       const cloudTasks = sanitizeTasks(data.tasks);
-      const merged = mergeTasks(tasks, cloudTasks);
-      const mergedJson = JSON.stringify(merged);
+      const cloudJson = JSON.stringify(cloudTasks);
       const currentJson = JSON.stringify(tasks);
 
-      if (mergedJson !== currentJson) {
-        tasks = merged;
-        localStorage.setItem(getKey(email), mergedJson);
+      if (cloudJson !== currentJson) {
+        tasks = cloudTasks;
+        localStorage.setItem(getKey(email), cloudJson);
         updateAccountsIndex(email, tasks.length);
 
         const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
@@ -2925,15 +2905,11 @@ async function syncFromCloud(email, isSilent = false){
         if (!isTyping) {
           render();
         }
-
-        const cloudJson = JSON.stringify(cloudTasks);
-        if (mergedJson !== cloudJson) {
-          await pushToCloud(email, tasks);
-        }
       }
-      lastSyncedJson = mergedJson;
+      lastSyncedJson = cloudJson;
       updateSyncIndicators('synced');
-    } else if (tasks.length > 0) {
+    } else if (data && data.exists === false && tasks.length > 0) {
+      // First time syncing existing local tasks to cloud
       await pushToCloud(email, tasks);
     } else {
       updateSyncIndicators('synced');
@@ -2953,7 +2929,7 @@ function startCloudSync(email){
     if (currentEmail === email && document.visibilityState === 'visible') {
       syncFromCloud(email, true);
     }
-  }, 5000);
+  }, 4000);
 }
 
 function stopCloudSync(){
@@ -2971,11 +2947,12 @@ function save(){
     showSavedIndicator();
 
     if (currentEmail !== 'guest@local') {
+      hasDirtyLocalChanges = true;
       clearTimeout(cloudPushTimer);
       updateSyncIndicators('syncing');
       cloudPushTimer = setTimeout(() => {
         pushToCloud(currentEmail, tasks);
-      }, 350);
+      }, 250);
     }
   } catch(e) {
     console.error('Storage error:', e);
