@@ -1993,7 +1993,7 @@ main{
       <div class="recent-list" id="recentList"></div>
     </div>
 
-    <p class="login-note">🔒 Your data is permanently saved in this browser. When you log out and log back in with the same email, your tasks and recipes are always restored.</p>
+    <p class="login-note">☁️ Real-time Cloud Sync: Sign in with the same email on your Phone and PC to keep all your tasks &amp; recipes automatically synced across devices.</p>
   </div>
 </div>
 
@@ -2017,7 +2017,7 @@ main{
       <div class="avatar" id="avatar">U</div>
       <div class="account-info">
         <strong id="userEmail">user@email.com</strong>
-        <small id="syncStatus">Saved locally</small>
+        <small id="syncStatus">☁️ Cloud Synced</small>
       </div>
       <div class="account-actions">
         <button class="export-icon-btn" id="exportBtn" title="Export Backup (JSON)" aria-label="Export Backup">
@@ -2683,12 +2683,77 @@ function sanitizeTasks(rawTasks){
   }));
 }
 
+const SYNC_API_BASE = (typeof window !== 'undefined' && window.location.origin && window.location.origin.includes('pages.dev'))
+  ? ''
+  : 'https://dotask.pages.dev';
+
+let cloudSyncTimeout = null;
+let isSyncingCloud = false;
+
+async function pushCloudTasks(email, tasksList){
+  if (!email || email === 'guest@local') return;
+  try {
+    const res = await fetch(`${SYNC_API_BASE}/api/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, tasks: tasksList })
+    });
+    return await res.json().catch(() => ({}));
+  } catch (err) {
+    console.warn('Cloud sync note:', err);
+    return null;
+  }
+}
+
+async function fetchCloudTasks(email){
+  if (!email || email === 'guest@local' || isSyncingCloud) return;
+  isSyncingCloud = true;
+  const status = $('syncStatus');
+  try {
+    const res = await fetch(`${SYNC_API_BASE}/api/sync?email=${encodeURIComponent(email)}`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error('Cloud sync request failed');
+    const data = await res.json();
+    if (data && data.ok) {
+      if (data.exists && Array.isArray(data.tasks)) {
+        tasks = sanitizeTasks(data.tasks);
+        localStorage.setItem(getKey(email), JSON.stringify(tasks));
+        updateAccountsIndex(email, tasks.length);
+        render();
+        if (status) status.textContent = '☁️ Synced across devices';
+      } else if (!data.exists && tasks.length > 0) {
+        await pushCloudTasks(email, tasks);
+        if (status) status.textContent = '☁️ Synced across devices';
+      } else {
+        if (status) status.textContent = '☁️ Synced across devices';
+      }
+    }
+  } catch(e) {
+    console.warn('Cloud sync check note:', e);
+  } finally {
+    isSyncingCloud = false;
+  }
+}
+
 function save(){
   if (!currentEmail) return;
   try {
     localStorage.setItem(getKey(currentEmail), JSON.stringify(tasks));
     updateAccountsIndex(currentEmail, tasks.length);
     showSavedIndicator();
+
+    if (currentEmail !== 'guest@local') {
+      clearTimeout(cloudSyncTimeout);
+      cloudSyncTimeout = setTimeout(() => {
+        pushCloudTasks(currentEmail, tasks).then(res => {
+          const status = $('syncStatus');
+          if (res && res.saved && status) {
+            status.textContent = '☁️ Synced across devices';
+          }
+        });
+      }, 500);
+    }
   } catch(e) {
     console.error('Storage error:', e);
   }
@@ -2697,8 +2762,12 @@ function save(){
 function showSavedIndicator(){
   const status = $('syncStatus');
   if (status) {
-    status.textContent = 'Saved just now';
-    setTimeout(() => { if (status) status.textContent = 'Saved locally'; }, 2000);
+    status.textContent = 'Syncing...';
+    setTimeout(() => {
+      if (status && status.textContent === 'Syncing...') {
+        status.textContent = '☁️ Synced across devices';
+      }
+    }, 1500);
   }
 }
 
@@ -2786,7 +2855,24 @@ function enter(email){
   navigateTo('tasks', false);
   setActiveNav();
   render();
+
+  // Instant Cloud Sync for cross-device persistence
+  if (currentEmail !== 'guest@local') {
+    fetchCloudTasks(currentEmail);
+  }
 }
+
+// Auto-sync when user wakes device or returns to this tab
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && currentEmail && currentEmail !== 'guest@local') {
+    fetchCloudTasks(currentEmail);
+  }
+});
+window.addEventListener('focus', () => {
+  if (currentEmail && currentEmail !== 'guest@local') {
+    fetchCloudTasks(currentEmail);
+  }
+});
 
 function logout(){
   try {
