@@ -2027,6 +2027,34 @@ main{
     color:white;
   }
 }
+
+/* CLOUD SYNC STYLES */
+@keyframes syncSpin{
+  from{transform:rotate(0deg)}
+  to{transform:rotate(360deg)}
+}
+.syncing-spin{
+  display:inline-block;
+  animation:syncSpin 0.9s linear infinite;
+}
+.header-action-btn.sync-btn{
+  background:var(--purple-light);
+  color:var(--purple);
+  border-color:rgba(124,58,237,0.22);
+}
+.header-action-btn.sync-btn:hover{
+  background:var(--purple);
+  color:#fff;
+}
+.m-action-btn.sync-btn{
+  background:var(--purple-light);
+  color:var(--purple);
+  border-color:transparent;
+}
+.m-action-btn.sync-btn:hover{
+  background:var(--purple);
+  color:#fff;
+}
 </style>
 </head>
 <body>
@@ -2093,6 +2121,9 @@ main{
         <small id="syncStatus">Saved locally</small>
       </div>
       <div class="account-actions">
+        <button class="export-icon-btn" id="drawerSyncBtn" title="Sync now with Cloud" aria-label="Sync now">
+          <span id="drawerSyncIcon">☁️</span>
+        </button>
         <button class="export-icon-btn" id="exportBtn" title="Export Backup (JSON)" aria-label="Export Backup">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
@@ -2119,6 +2150,9 @@ main{
         </div>
       </div>
       <div class="mobile-actions">
+        <button class="m-action-btn sync-btn" id="mobileSyncBtn" type="button" title="Sync with Cloud">
+          <span id="mSyncIcon">☁️</span>
+        </button>
         <button class="m-action-btn theme-toggle-btn" id="mobileThemeBtn" type="button" title="Toggle Theme">
           <span class="m-theme-icon">🌙</span> <span class="m-theme-text">Dark</span>
         </button>
@@ -2150,6 +2184,9 @@ main{
           <p class="subtitle" id="dailyMessage">A little progress each day adds up.</p>
         </div>
         <div class="header-right-tools">
+          <button class="header-action-btn sync-btn" id="headerSyncBtn" type="button" title="Sync with Cloud">
+            <span id="hSyncIcon">☁️</span> <span id="hSyncText">Synced</span>
+          </button>
           <div class="header-user-badge">
             <span class="user-avatar-small" id="headerAvatar">U</span>
             <span class="user-email-text" id="headerUserEmail">user@email.com</span>
@@ -2769,12 +2806,194 @@ function sanitizeTasks(rawTasks){
   }));
 }
 
+// -------------------------------------------------------------
+// NEON CLOUD DATABASE & CROSS-DEVICE SYNC ENGINE
+// -------------------------------------------------------------
+const NEON_SQL_URL = 'https://ep-twilight-bonus-a12kez3u-pooler.ap-southeast-1.aws.neon.tech/sql';
+const NEON_CONN_STR = 'postgresql://neondb_owner:npg_LWzKQC3h0RSt@ep-twilight-bonus-a12kez3u-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
+
+let cloudPushTimer = null;
+let cloudSyncTimer = null;
+let isSyncing = false;
+let lastSyncedJson = '';
+
+async function runNeonSql(query, params = []){
+  const res = await fetch(NEON_SQL_URL, {
+    method: 'POST',
+    headers: {
+      'Neon-Connection-String': NEON_CONN_STR,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ query, params })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || ('Neon SQL error ' + res.status));
+  }
+  const data = await res.json();
+  return data.rows || [];
+}
+
+function updateSyncIndicators(state){
+  const status = $('syncStatus');
+  const hText = $('hSyncText');
+  const hIcon = $('hSyncIcon');
+  const mIcon = $('mSyncIcon');
+  const dIcon = $('drawerSyncIcon');
+
+  if (state === 'syncing') {
+    if (status) status.textContent = '🔄 Syncing with Cloud...';
+    if (hText) hText.textContent = 'Syncing...';
+    if (hIcon) { hIcon.textContent = '🔄'; hIcon.classList.add('syncing-spin'); }
+    if (mIcon) { mIcon.textContent = '🔄'; mIcon.classList.add('syncing-spin'); }
+    if (dIcon) { dIcon.textContent = '🔄'; dIcon.classList.add('syncing-spin'); }
+  } else if (state === 'synced') {
+    if (status) status.textContent = '☁️ Synced across devices';
+    if (hText) hText.textContent = 'Synced';
+    if (hIcon) { hIcon.textContent = '✓'; hIcon.classList.remove('syncing-spin'); }
+    if (mIcon) { mIcon.textContent = '✓'; mIcon.classList.remove('syncing-spin'); }
+    if (dIcon) { dIcon.textContent = '✓'; dIcon.classList.remove('syncing-spin'); }
+    setTimeout(() => {
+      if (hIcon && hIcon.textContent === '✓') hIcon.textContent = '☁️';
+      if (mIcon && mIcon.textContent === '✓') mIcon.textContent = '☁️';
+      if (dIcon && dIcon.textContent === '✓') dIcon.textContent = '☁️';
+    }, 2500);
+  } else if (state === 'offline' || state === 'error') {
+    if (status) status.textContent = '💾 Saved locally';
+    if (hText) hText.textContent = 'Local';
+    if (hIcon) { hIcon.textContent = '💾'; hIcon.classList.remove('syncing-spin'); }
+    if (mIcon) { mIcon.textContent = '💾'; mIcon.classList.remove('syncing-spin'); }
+    if (dIcon) { dIcon.textContent = '💾'; dIcon.classList.remove('syncing-spin'); }
+  }
+}
+
+// Smart merging by task ID & timestamp so changes on both devices are preserved
+function mergeTasks(localList, cloudList){
+  const map = new Map();
+  for (const t of cloudList) {
+    if (t && t.id != null) map.set(String(t.id), t);
+  }
+  for (const t of localList) {
+    if (!t || t.id == null) continue;
+    const key = String(t.id);
+    if (!map.has(key)) {
+      map.set(key, t);
+    } else {
+      const existing = map.get(key);
+      const localTime = t.updatedAt || t.createdAt || 0;
+      const cloudTime = existing.updatedAt || existing.createdAt || 0;
+      if (localTime >= cloudTime) {
+        map.set(key, t);
+      }
+    }
+  }
+  return Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+}
+
+// Push local tasks to Neon DB
+async function pushToCloud(email, taskList){
+  if (!email || email === 'guest@local') return;
+  try {
+    const cleanTasks = sanitizeTasks(taskList);
+    const jsonStr = JSON.stringify(cleanTasks);
+    await runNeonSql(`
+      INSERT INTO taskly_user_data (email, tasks_json, updated_at)
+      VALUES ($1, $2::jsonb, NOW())
+      ON CONFLICT (email) DO UPDATE SET tasks_json = EXCLUDED.tasks_json, updated_at = NOW();
+    `, [email, jsonStr]);
+    lastSyncedJson = jsonStr;
+    updateSyncIndicators('synced');
+  } catch (err) {
+    console.warn('Cloud push note:', err);
+    updateSyncIndicators('error');
+  }
+}
+
+// Fetch tasks from Neon DB and merge/sync
+async function syncFromCloud(email, isSilent = false){
+  if (!email || email === 'guest@local') return;
+  if (isSyncing) return;
+  isSyncing = true;
+  if (!isSilent) updateSyncIndicators('syncing');
+
+  try {
+    const rows = await runNeonSql(
+      'SELECT tasks_json, updated_at FROM taskly_user_data WHERE email = $1;',
+      [email]
+    );
+
+    if (rows && rows.length > 0 && rows[0].tasks_json) {
+      let rawCloud = rows[0].tasks_json;
+      if (typeof rawCloud === 'string') {
+        try { rawCloud = JSON.parse(rawCloud); } catch { rawCloud = []; }
+      }
+      const cloudTasks = sanitizeTasks(Array.isArray(rawCloud) ? rawCloud : []);
+      const merged = mergeTasks(tasks, cloudTasks);
+      const mergedJson = JSON.stringify(merged);
+      const currentJson = JSON.stringify(tasks);
+
+      if (mergedJson !== currentJson) {
+        tasks = merged;
+        localStorage.setItem(getKey(email), mergedJson);
+        updateAccountsIndex(email, tasks.length);
+
+        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        const isTyping = activeTag === 'input' || activeTag === 'textarea';
+        if (!isTyping) {
+          render();
+        }
+
+        const cloudJson = JSON.stringify(cloudTasks);
+        if (mergedJson !== cloudJson) {
+          await pushToCloud(email, tasks);
+        }
+      }
+      lastSyncedJson = mergedJson;
+      updateSyncIndicators('synced');
+    } else if (tasks.length > 0) {
+      await pushToCloud(email, tasks);
+    } else {
+      updateSyncIndicators('synced');
+    }
+  } catch (err) {
+    console.warn('Cloud sync note:', err);
+    if (!isSilent) updateSyncIndicators('offline');
+  } finally {
+    isSyncing = false;
+  }
+}
+
+function startCloudSync(email){
+  stopCloudSync();
+  if (!email || email === 'guest@local') return;
+  cloudSyncTimer = setInterval(() => {
+    if (currentEmail === email && document.visibilityState === 'visible') {
+      syncFromCloud(email, true);
+    }
+  }, 5000);
+}
+
+function stopCloudSync(){
+  if (cloudSyncTimer) {
+    clearInterval(cloudSyncTimer);
+    cloudSyncTimer = null;
+  }
+}
+
 function save(){
   if (!currentEmail) return;
   try {
     localStorage.setItem(getKey(currentEmail), JSON.stringify(tasks));
     updateAccountsIndex(currentEmail, tasks.length);
     showSavedIndicator();
+
+    if (currentEmail !== 'guest@local') {
+      clearTimeout(cloudPushTimer);
+      updateSyncIndicators('syncing');
+      cloudPushTimer = setTimeout(() => {
+        pushToCloud(currentEmail, tasks);
+      }, 350);
+    }
   } catch(e) {
     console.error('Storage error:', e);
   }
@@ -2782,9 +3001,8 @@ function save(){
 
 function showSavedIndicator(){
   const status = $('syncStatus');
-  if (status) {
-    status.textContent = 'Saved just now';
-    setTimeout(() => { if (status) status.textContent = 'Saved locally'; }, 2000);
+  if (status && currentEmail === 'guest@local') {
+    status.textContent = 'Saved locally';
   }
 }
 
@@ -2872,9 +3090,19 @@ function enter(email){
   navigateTo('tasks', false);
   setActiveNav();
   render();
+
+  // Cloud Sync for multi-device sync
+  if (currentEmail !== 'guest@local') {
+    updateSyncIndicators('syncing');
+    syncFromCloud(currentEmail, false);
+    startCloudSync(currentEmail);
+  } else {
+    updateSyncIndicators('offline');
+  }
 }
 
 function logout(){
+  stopCloudSync();
   try {
     localStorage.removeItem(CURRENT_USER_KEY);
   } catch {}
@@ -3596,6 +3824,31 @@ if ($('loginThemeBtn')) $('loginThemeBtn').addEventListener('click', toggleTheme
 if ($('logoutBtn')) $('logoutBtn').addEventListener('click', logout);
 if ($('headerLogoutBtn')) $('headerLogoutBtn').addEventListener('click', logout);
 if ($('mobileLogoutBtn')) $('mobileLogoutBtn').addEventListener('click', logout);
+
+// Bind Cloud Sync buttons & events
+function triggerManualSync(){
+  if (currentEmail && currentEmail !== 'guest@local') {
+    showToast('Syncing with Cloud...');
+    syncFromCloud(currentEmail, false);
+  } else {
+    showToast('Sign in with email to enable cloud sync.');
+  }
+}
+if ($('mobileSyncBtn')) $('mobileSyncBtn').addEventListener('click', triggerManualSync);
+if ($('headerSyncBtn')) $('headerSyncBtn').addEventListener('click', triggerManualSync);
+if ($('drawerSyncBtn')) $('drawerSyncBtn').addEventListener('click', triggerManualSync);
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && currentEmail && currentEmail !== 'guest@local') {
+    syncFromCloud(currentEmail, true);
+  }
+});
+
+window.addEventListener('focus', () => {
+  if (currentEmail && currentEmail !== 'guest@local') {
+    syncFromCloud(currentEmail, true);
+  }
+});
 
 // SIDEBAR TOGGLE ENGINE (2-LINE MENU BUTTON)
 function toggleSidebar(){
