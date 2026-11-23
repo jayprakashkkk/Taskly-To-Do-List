@@ -2807,32 +2807,16 @@ function sanitizeTasks(rawTasks){
 }
 
 // -------------------------------------------------------------
-// NEON CLOUD DATABASE & CROSS-DEVICE SYNC ENGINE
+// CLOUD DATABASE & CROSS-DEVICE SYNC ENGINE (/api/sync)
 // -------------------------------------------------------------
-const NEON_SQL_URL = 'https://ep-twilight-bonus-a12kez3u-pooler.ap-southeast-1.aws.neon.tech/sql';
-const NEON_CONN_STR = 'postgresql://neondb_owner:npg_LWzKQC3h0RSt@ep-twilight-bonus-a12kez3u-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
+const SYNC_API_BASE = (typeof window !== 'undefined' && window.location.origin && window.location.origin.includes('http'))
+  ? window.location.origin
+  : 'https://dotask.pages.dev';
 
 let cloudPushTimer = null;
 let cloudSyncTimer = null;
 let isSyncing = false;
 let lastSyncedJson = '';
-
-async function runNeonSql(query, params = []){
-  const res = await fetch(NEON_SQL_URL, {
-    method: 'POST',
-    headers: {
-      'Neon-Connection-String': NEON_CONN_STR,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ query, params })
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || ('Neon SQL error ' + res.status));
-  }
-  const data = await res.json();
-  return data.rows || [];
-}
 
 function updateSyncIndicators(state){
   const status = $('syncStatus');
@@ -2890,18 +2874,18 @@ function mergeTasks(localList, cloudList){
   return Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 }
 
-// Push local tasks to Neon DB
+// Push local tasks to Cloud API
 async function pushToCloud(email, taskList){
   if (!email || email === 'guest@local') return;
   try {
     const cleanTasks = sanitizeTasks(taskList);
-    const jsonStr = JSON.stringify(cleanTasks);
-    await runNeonSql(`
-      INSERT INTO taskly_user_data (email, tasks_json, updated_at)
-      VALUES ($1, $2::jsonb, NOW())
-      ON CONFLICT (email) DO UPDATE SET tasks_json = EXCLUDED.tasks_json, updated_at = NOW();
-    `, [email, jsonStr]);
-    lastSyncedJson = jsonStr;
+    const res = await fetch(`${SYNC_API_BASE}/api/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, tasks: cleanTasks })
+    });
+    if (!res.ok) throw new Error('Sync failed with status ' + res.status);
+    lastSyncedJson = JSON.stringify(cleanTasks);
     updateSyncIndicators('synced');
   } catch (err) {
     console.warn('Cloud push note:', err);
@@ -2909,7 +2893,7 @@ async function pushToCloud(email, taskList){
   }
 }
 
-// Fetch tasks from Neon DB and merge/sync
+// Fetch tasks from Cloud API and merge/sync
 async function syncFromCloud(email, isSilent = false){
   if (!email || email === 'guest@local') return;
   if (isSyncing) return;
@@ -2917,17 +2901,16 @@ async function syncFromCloud(email, isSilent = false){
   if (!isSilent) updateSyncIndicators('syncing');
 
   try {
-    const rows = await runNeonSql(
-      'SELECT tasks_json, updated_at FROM taskly_user_data WHERE email = $1;',
-      [email]
-    );
+    const res = await fetch(`${SYNC_API_BASE}/api/sync?email=${encodeURIComponent(email)}`, {
+      method: 'GET',
+      headers: { 'Cache-Control': 'no-cache' }
+    });
 
-    if (rows && rows.length > 0 && rows[0].tasks_json) {
-      let rawCloud = rows[0].tasks_json;
-      if (typeof rawCloud === 'string') {
-        try { rawCloud = JSON.parse(rawCloud); } catch { rawCloud = []; }
-      }
-      const cloudTasks = sanitizeTasks(Array.isArray(rawCloud) ? rawCloud : []);
+    if (!res.ok) throw new Error('Fetch failed with status ' + res.status);
+    const data = await res.json();
+
+    if (data && data.exists && Array.isArray(data.tasks)) {
+      const cloudTasks = sanitizeTasks(data.tasks);
       const merged = mergeTasks(tasks, cloudTasks);
       const mergedJson = JSON.stringify(merged);
       const currentJson = JSON.stringify(tasks);
