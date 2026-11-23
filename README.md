@@ -209,8 +209,8 @@ Deploying Taskly to Cloudflare Pages takes under two minutes:
 Taskly-To-Do-List/
 ├── functions/
 │   └── api/
-│       ├── sync.js              # Serverless Edge sync handler (Neon SQL)
-│       └── [[path]].js          # Catch-all API router
+│       ├── sync.js              # Serverless Edge sync handler (Neon SQL + auto table create)
+│       └── tasks.js             # Route alias for /api/tasks
 ├── index.html                   # Main production web application
 ├── taskly to do list/
 │   └── index.html               # Alternate standalone template
