@@ -2013,11 +2013,6 @@ main{
 
     <div class="side-spacer"></div>
 
-    <button class="theme-toggle" id="themeToggle" type="button">
-      <span id="themeLabel">🌙 Dark Mode</span>
-      <span id="themeIcon">Switch</span>
-    </button>
-
     <div class="account" id="accountMenu">
       <div class="avatar" id="avatar">U</div>
       <div class="account-info">
@@ -3478,11 +3473,11 @@ $('exportBtn').addEventListener('click', () => {
 
 // DARK MODE & THEME CONTROLS ACROSS ALL SCREENS
 function updateThemeUI(isDark){
-  const labelFull = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+  const labelFull = isDark ? 'Light Mode' : 'Dark Mode';
   const labelCompact = isDark ? 'Light' : 'Dark';
   const icon = isDark ? '☀️' : '🌙';
 
-  if ($('themeLabel')) $('themeLabel').textContent = labelFull;
+  if ($('themeLabel')) $('themeLabel').textContent = `${icon} ${labelFull}`;
   if ($('headerThemeBtn')) $('headerThemeBtn').innerHTML = `<span class="h-theme-icon">${icon}</span> <span class="h-theme-text">${labelFull}</span>`;
   if ($('mobileThemeBtn')) $('mobileThemeBtn').innerHTML = `<span class="m-theme-icon">${icon}</span> <span class="m-theme-text">${labelCompact}</span>`;
   if ($('loginThemeBtn')) $('loginThemeBtn').innerHTML = `<span class="theme-icon">${icon}</span> <span class="theme-text">${labelFull}</span>`;
