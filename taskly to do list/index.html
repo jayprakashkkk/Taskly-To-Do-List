@@ -87,27 +87,151 @@ button{cursor:pointer}
   background:var(--paper);
   border:0;
   overflow:hidden;
+  transition:grid-template-columns .24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.app.sidebar-closed{
+  grid-template-columns:0px 1fr;
 }
 
 /* DESKTOP SIDEBAR */
 aside{
   background:var(--paper-card);
   border-right:1px solid var(--line);
-  padding:24px 18px;
+  padding:20px 16px;
   display:flex;
   flex-direction:column;
   gap:6px;
   height:100vh;
   overflow-y:auto;
+  width:260px;
+  box-sizing:border-box;
+  transition:all .24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.app.sidebar-closed aside{
+  padding-left:0;
+  padding-right:0;
+  width:0;
+  opacity:0;
+  pointer-events:none;
+  overflow:hidden;
+  border-right-color:transparent;
 }
 
+.brand-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin:2px 4px 18px;
+}
 .brand{
   display:flex;
   align-items:center;
   gap:10px;
   font:800 22px Manrope,sans-serif;
   letter-spacing:-.7px;
-  margin:2px 8px 24px;
+  margin:0;
+}
+.sidebar-close-icon{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:18px;
+  cursor:pointer;
+  padding:6px 8px;
+  border-radius:8px;
+  display:none;
+  line-height:1;
+}
+.sidebar-close-icon:hover{
+  background:var(--line);
+  color:var(--ink);
+}
+
+.two-line-menu-btn{
+  width:38px;
+  height:38px;
+  border-radius:10px;
+  border:1.5px solid var(--line);
+  background:var(--paper-card);
+  display:inline-flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  cursor:pointer;
+  flex-shrink:0;
+  transition:all .15s;
+  color:var(--ink);
+  padding:0;
+}
+.two-line-menu-btn:hover{
+  background:var(--purple-light);
+  border-color:var(--purple);
+  color:var(--purple);
+}
+.two-line-bar{
+  display:block;
+  width:18px;
+  height:2.5px;
+  background:currentColor;
+  border-radius:2px;
+}
+
+/* TOP NAV BAR (SEARCH BAR AT THE VERY TOP) */
+.top-nav-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:12px 34px;
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+  position:sticky;
+  top:0;
+  z-index:30;
+  flex-shrink:0;
+}
+.top-left-group{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex:1;
+  max-width:560px;
+}
+.top-search-wrap{
+  position:relative;
+  flex:1;
+  display:flex;
+  align-items:center;
+}
+.top-search-icon{
+  position:absolute;
+  left:13px;
+  font-size:15px;
+  color:var(--muted);
+  pointer-events:none;
+}
+.top-search-input{
+  width:100%;
+  padding:9px 14px 9px 36px;
+  border-radius:12px;
+  border:1.5px solid var(--line);
+  background:var(--input-bg);
+  color:var(--ink);
+  font-size:13.5px;
+  font-weight:500;
+  outline:none;
+  transition:all .15s;
+}
+.top-search-input:focus{
+  border-color:var(--purple);
+  box-shadow:0 0 0 3px var(--purple-glow);
+  background:var(--paper);
+}
+.top-right-group{
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 .brand-icon{
   width:36px;
@@ -1816,53 +1940,111 @@ main{
   border-color:var(--red);
   color:var(--red);
 }
-.header-action-btn.sync-pill-btn{
-  background:var(--purple-light);
-  border-color:rgba(124,58,237,0.25);
-  color:var(--purple);
-}
-.header-action-btn.sync-pill-btn:hover{
-  background:var(--purple);
-  color:#fff;
-}
-.m-action-btn.sync-btn{
-  background:var(--purple-light);
-  color:var(--purple);
-}
-
 /* MOBILE WORKSPACE STRIP */
 .mobile-workspace-strip{
   display:none;
 }
+.sidebar-backdrop{
+  display:none;
+}
+.mobile-action-bar{
+  display:none;
+}
 @media(max-width:768px){
+  .app{
+    display:block;
+    position:relative;
+  }
+  .top-nav-bar{
+    display:none;
+  }
+  aside{
+    position:fixed;
+    top:0;
+    left:-290px;
+    width:280px;
+    height:100vh;
+    z-index:999;
+    box-shadow:none;
+    transition:left .25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .25s ease;
+  }
+  .app.mobile-sidebar-open aside{
+    left:0;
+    box-shadow:0 0 50px rgba(0,0,0,0.5);
+  }
+  .sidebar-backdrop{
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100vw;
+    height:100vh;
+    background:rgba(0,0,0,0.45);
+    backdrop-filter:blur(2px);
+    z-index:998;
+  }
+  .app.mobile-sidebar-open .sidebar-backdrop{
+    display:block;
+  }
+  .sidebar-close-icon{
+    display:block;
+  }
   .mobile-app-bar{
     display:flex!important;
     align-items:center;
-    justify-content:space-between;
-    padding:10px 16px;
+    gap:10px;
+    padding:10px 14px;
     background:var(--paper-card);
     border-bottom:1px solid var(--line);
+    position:sticky;
+    top:0;
+    z-index:40;
     flex-shrink:0;
-    z-index:20;
   }
-  .mobile-brand{
+  .mobile-search-wrap{
+    position:relative;
+    flex:1;
     display:flex;
     align-items:center;
-    gap:8px;
-    font:800 18px Manrope,sans-serif;
-    letter-spacing:-.5px;
-    color:var(--ink);
   }
-  .mobile-brand .brand-icon{
-    width:28px;
-    height:28px;
-    font-size:15px;
-    border-radius:8px;
+  .mobile-search-input{
+    width:100%;
+    padding:8px 12px 8px 30px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--bg);
+    color:var(--ink);
+    font-size:13px;
+    outline:none;
+  }
+  .mobile-search-wrap .top-search-icon{
+    left:9px;
+    font-size:13px;
+    position:absolute;
+    color:var(--muted);
+    pointer-events:none;
   }
   .mobile-actions{
     display:flex;
     align-items:center;
-    gap:8px;
+    gap:6px;
+  }
+  .mobile-action-bar{
+    display:flex;
+    gap:10px;
+    margin:14px 0 6px;
+  }
+  .mobile-action-bar button{
+    flex:1;
+  }
+  .main-content-scroll{
+    padding:20px 16px!important;
+  }
+  .header{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:12px;
+    margin-bottom:16px;
   }
   .header-right-tools{
     display:flex!important;
@@ -2006,18 +2188,23 @@ main{
       <div class="recent-list" id="recentList"></div>
     </div>
 
-    <p class="login-note">☁️ Real-time Cloud Sync: Sign in with the same email on your Phone and PC to keep all your tasks &amp; recipes automatically synced across devices.</p>
+    <p class="login-note">🔒 Your data is permanently saved in this browser. When you log out and log back in with the same email, your tasks and recipes are always restored.</p>
   </div>
 </div>
 
 <!-- 100% FULL SCREEN APP CONTAINER -->
 <div class="app hidden" id="app">
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
   <!-- DESKTOP SIDEBAR -->
-  <aside>
-    <div class="brand"><span class="brand-icon">✓</span> taskly</div>
+  <aside id="sidebar">
+    <div class="brand-row">
+      <div class="brand"><span class="brand-icon">✓</span> taskly</div>
+      <button class="sidebar-close-icon" id="sidebarCloseBtn" type="button" aria-label="Close sidebar">✕</button>
+    </div>
     
     <div class="side-nav-wrap">
-      <div class="section-label">Workspace</div>
+      <div class="section-label">WORKSPACE</div>
       <button class="nav active" data-section="all"><span class="nav-icon">▦</span> All Tasks <span class="nav-badge" id="badgeAll">0</span></button>
       <button class="nav" data-section="pinned"><span class="nav-icon">★</span> Important <span class="nav-badge" id="badgePinned">0</span></button>
       <button class="nav" data-section="today"><span class="nav-icon">◷</span> Added Today <span class="nav-badge" id="badgeToday">0</span></button>
@@ -2030,7 +2217,7 @@ main{
       <div class="avatar" id="avatar">U</div>
       <div class="account-info">
         <strong id="userEmail">user@email.com</strong>
-        <small id="syncStatus">☁️ Cloud Synced</small>
+        <small id="syncStatus">Saved locally</small>
       </div>
       <div class="account-actions">
         <button class="export-icon-btn" id="exportBtn" title="Export Backup (JSON)" aria-label="Export Backup">
@@ -2047,20 +2234,50 @@ main{
 
   <!-- MAIN AREA -->
   <main>
-    <!-- MOBILE TOP APP BAR -->
+    <!-- TOP NAV BAR (SEARCH BAR AT THE VERY TOP ON DESKTOP) -->
+    <header class="top-nav-bar">
+      <div class="top-left-group">
+        <button class="two-line-menu-btn" id="menuToggleBtn" type="button" aria-label="Toggle Workspace Menu" title="Toggle Workspace Menu">
+          <span class="two-line-bar"></span>
+          <span class="two-line-bar"></span>
+        </button>
+        <div class="top-search-wrap">
+          <span class="top-search-icon">⌕</span>
+          <input class="search top-search-input" id="searchInput" type="search" placeholder="Search tasks or recipes..." aria-label="Search tasks">
+        </div>
+      </div>
+      <div class="top-right-group">
+        <button class="recipe-btn" id="openRecipeStudioBtn" type="button"><span class="btn-icon">🍳</span> Recipe</button>
+        <button class="primary" id="newTaskBtn" type="button">＋ New task</button>
+        <button class="header-action-btn theme-toggle-btn" id="headerThemeBtn" type="button" title="Toggle Dark/Light Mode">
+          <span class="h-theme-icon">🌙</span> <span class="h-theme-text">Dark Mode</span>
+        </button>
+        <div class="header-user-badge">
+          <span class="user-avatar-small" id="headerAvatar">U</span>
+          <span class="user-email-text" id="headerUserEmail">user@email.com</span>
+        </div>
+        <button class="header-action-btn logout-btn" id="headerLogoutBtn" type="button" title="Log out">
+          <span>↪</span> <span>Log out</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MOBILE TOP APP BAR (SEARCH BAR AT THE VERY TOP ON MOBILE) -->
     <div class="mobile-app-bar">
-      <div class="mobile-brand">
-        <span class="brand-icon">✓</span> taskly
+      <button class="two-line-menu-btn" id="mobileMenuToggleBtn" type="button" aria-label="Toggle Workspace Menu" title="Toggle Workspace Menu">
+        <span class="two-line-bar"></span>
+        <span class="two-line-bar"></span>
+      </button>
+      <div class="mobile-search-wrap">
+        <span class="top-search-icon">⌕</span>
+        <input class="search mobile-search-input" id="mobileSearchInput" type="search" placeholder="Search tasks or recipes..." aria-label="Search tasks">
       </div>
       <div class="mobile-actions">
-        <button class="m-action-btn sync-btn" id="mobileSyncBtn" type="button" title="Sync now with Cloud">
-          <span class="m-sync-icon" id="mSyncIcon">☁️</span>
-        </button>
         <button class="m-action-btn theme-toggle-btn" id="mobileThemeBtn" type="button" title="Toggle Theme">
-          <span class="m-theme-icon">🌙</span> <span class="m-theme-text">Dark</span>
+          <span class="m-theme-icon">🌙</span>
         </button>
         <button class="m-action-btn logout-btn" id="mobileLogoutBtn" type="button" title="Log out">
-          <span>↪</span> <span>Logout</span>
+          <span>↪</span>
         </button>
       </div>
     </div>
@@ -2073,21 +2290,12 @@ main{
           <h1>Good to see you 👋</h1>
           <p class="subtitle" id="dailyMessage">A little progress each day adds up.</p>
         </div>
-        <div class="header-right-tools">
-          <button class="header-action-btn sync-pill-btn" id="headerSyncBtn" type="button" title="Real-time Cloud Sync">
-            <span class="h-sync-icon" id="headerSyncIcon">☁️</span> <span class="h-sync-text" id="headerSyncText">Synced</span>
-          </button>
-          <div class="header-user-badge">
-            <span class="user-avatar-small" id="headerAvatar">U</span>
-            <span class="user-email-text" id="headerUserEmail">user@email.com</span>
-          </div>
-          <button class="header-action-btn theme-toggle-btn" id="headerThemeBtn" type="button" title="Toggle Dark/Light Mode">
-            <span class="h-theme-icon">🌙</span> <span class="h-theme-text">Dark Mode</span>
-          </button>
-          <button class="header-action-btn logout-btn" id="headerLogoutBtn" type="button" title="Log out">
-            <span>↪</span> <span>Log out</span>
-          </button>
-        </div>
+      </div>
+
+      <!-- MOBILE ACTION BUTTONS (NEW TASK & RECIPE) -->
+      <div class="mobile-action-bar">
+        <button class="recipe-btn" id="mobileRecipeBtn" type="button"><span class="btn-icon">🍳</span> Recipe</button>
+        <button class="primary" id="mobileNewTaskBtn" type="button">＋ New task</button>
       </div>
 
       <!-- MOBILE WORKSPACE NAV STRIP (ALL, IMPORTANT, TODAY, RECIPE) -->
@@ -2106,14 +2314,6 @@ main{
         </div>
         <div class="percent" id="progressNum">0%</div>
       </section>
-
-      <div class="search-row">
-        <input class="search" id="searchInput" type="search" placeholder="⌕  Search tasks or recipes..." aria-label="Search tasks">
-        <div class="action-buttons">
-          <button class="recipe-btn" id="openRecipeStudioBtn" type="button">🍳 Recipe</button>
-          <button class="primary" id="newTaskBtn" type="button">＋ New task</button>
-        </div>
-      </div>
 
       <!-- NEW TASK FORM -->
       <form class="add-card" id="taskForm" hidden>
@@ -2702,153 +2902,27 @@ function sanitizeTasks(rawTasks){
   }));
 }
 
-const SYNC_API_BASE = (typeof window !== 'undefined' && window.location.origin && window.location.origin.includes('pages.dev'))
-  ? ''
-  : 'https://dotask.pages.dev';
-
-let cloudSyncTimeout = null;
-let isSyncingCloud = false;
-let syncPollInterval = null;
-let lastKnownCloudJson = '';
-
-function updateSyncIndicators(state){
-  const status = $('syncStatus');
-  const hText = $('headerSyncText');
-  const hIcon = $('headerSyncIcon');
-  const mIcon = $('mSyncIcon');
-
-  if (state === 'syncing') {
-    if (status) status.textContent = '🔄 Syncing with Cloud...';
-    if (hText) hText.textContent = 'Syncing...';
-    if (hIcon) hIcon.textContent = '🔄';
-    if (mIcon) mIcon.textContent = '🔄';
-  } else if (state === 'saving') {
-    if (status) status.textContent = '☁️ Saving to Cloud...';
-    if (hText) hText.textContent = 'Saving...';
-    if (hIcon) hIcon.textContent = '☁️';
-    if (mIcon) mIcon.textContent = '☁️';
-  } else if (state === 'synced') {
-    if (status) status.textContent = '☁️ Synced across devices';
-    if (hText) hText.textContent = 'Synced';
-    if (hIcon) hIcon.textContent = '✓';
-    if (mIcon) mIcon.textContent = '✓';
-    setTimeout(() => {
-      if (hIcon && hIcon.textContent === '✓') hIcon.textContent = '☁️';
-      if (mIcon && mIcon.textContent === '✓') mIcon.textContent = '☁️';
-    }, 2000);
-  } else if (state === 'offline' || state === 'error') {
-    if (status) status.textContent = '⚠️ Offline (Local backup active)';
-    if (hText) hText.textContent = 'Offline';
-    if (hIcon) hIcon.textContent = '⚠️';
-    if (mIcon) mIcon.textContent = '⚠️';
-  }
-}
-
-async function pushCloudTasks(email, tasksList){
-  if (!email || email === 'guest@local') return null;
-  updateSyncIndicators('saving');
-  try {
-    const res = await fetch(`${SYNC_API_BASE}/api/sync`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache'
-      },
-      body: JSON.stringify({ email, tasks: tasksList })
-    });
-    const data = await res.json().catch(() => ({}));
-    if (data && data.saved) {
-      lastKnownCloudJson = JSON.stringify(tasksList);
-      updateSyncIndicators('synced');
-    }
-    return data;
-  } catch (err) {
-    console.warn('Cloud sync push note:', err);
-    updateSyncIndicators('error');
-    return null;
-  }
-}
-
-async function fetchCloudTasks(email, isSilent = false){
-  if (!email || email === 'guest@local' || isSyncingCloud) return;
-  isSyncingCloud = true;
-  if (!isSilent) updateSyncIndicators('syncing');
-
-  try {
-    const bust = Date.now();
-    const res = await fetch(`${SYNC_API_BASE}/api/sync?email=${encodeURIComponent(email)}&_t=${bust}`, {
-      headers: { 'Accept': 'application/json' },
-      cache: 'no-store'
-    });
-    if (!res.ok) throw new Error('Cloud sync request failed');
-    const data = await res.json();
-
-    if (data && data.ok) {
-      if (data.exists && Array.isArray(data.tasks)) {
-        const cloudTasks = sanitizeTasks(data.tasks);
-        const incomingJson = JSON.stringify(cloudTasks);
-        const currentJson = JSON.stringify(tasks);
-
-        // Only update & re-render if data actually changed
-        if (incomingJson !== currentJson) {
-          lastKnownCloudJson = incomingJson;
-          tasks = cloudTasks;
-          localStorage.setItem(getKey(email), JSON.stringify(tasks));
-          updateAccountsIndex(email, tasks.length);
-
-          // Avoid resetting focus if user is currently typing in an input
-          const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-          const isTyping = activeTag === 'input' || activeTag === 'textarea';
-          if (!isTyping) {
-            render();
-          }
-        }
-        updateSyncIndicators('synced');
-      } else if (!data.exists && tasks.length > 0) {
-        // Upload initial tasks to cloud
-        await pushCloudTasks(email, tasks);
-      } else {
-        updateSyncIndicators('synced');
-      }
-    }
-  } catch(e) {
-    console.warn('Cloud sync check note:', e);
-    if (!isSilent) updateSyncIndicators('error');
-  } finally {
-    isSyncingCloud = false;
-  }
-}
-
-function startSyncPolling(){
-  if (syncPollInterval) clearInterval(syncPollInterval);
-  syncPollInterval = setInterval(() => {
-    if (currentEmail && currentEmail !== 'guest@local' && !isSyncingCloud) {
-      fetchCloudTasks(currentEmail, true); // true = silent background poll
-    }
-  }, 3000); // Check every 3 seconds for seamless multi-device updates
-}
-
 function save(){
   if (!currentEmail) return;
   try {
     localStorage.setItem(getKey(currentEmail), JSON.stringify(tasks));
     updateAccountsIndex(currentEmail, tasks.length);
     showSavedIndicator();
-
-    if (currentEmail !== 'guest@local') {
-      clearTimeout(cloudSyncTimeout);
-      updateSyncIndicators('saving');
-      cloudSyncTimeout = setTimeout(() => {
-        pushCloudTasks(currentEmail, tasks);
-      }, 350);
-    }
   } catch(e) {
     console.error('Storage error:', e);
   }
 }
 
 function showSavedIndicator(){
-  updateSyncIndicators('saving');
+  const status = $('syncStatus');
+  if (status) {
+    status.textContent = 'Saved just now';
+    setTimeout(() => {
+      if (status && status.textContent === 'Saved just now') {
+        status.textContent = 'Saved locally';
+      }
+    }, 1500);
+  }
 }
 
 function showToast(message){
@@ -2921,7 +2995,9 @@ function enter(email){
   section = 'all';
   searchTerm = '';
 
-  $('searchInput').value = '';
+  if ($('searchInput')) $('searchInput').value = '';
+  if ($('mobileSearchInput')) $('mobileSearchInput').value = '';
+
   const displayEmail = currentEmail === 'guest@local' ? 'Guest User' : currentEmail;
   const avatarLetter = currentEmail === 'guest@local' ? 'G' : (currentEmail[0] || 'U').toUpperCase();
   if ($('userEmail')) $('userEmail').textContent = displayEmail;
@@ -2935,32 +3011,9 @@ function enter(email){
   navigateTo('tasks', false);
   setActiveNav();
   render();
-
-  // Instant Cloud Sync for cross-device persistence
-  if (currentEmail !== 'guest@local') {
-    fetchCloudTasks(currentEmail, false);
-    startSyncPolling();
-  }
 }
 
-// Auto-sync when user wakes device or returns to this tab
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && currentEmail && currentEmail !== 'guest@local') {
-    fetchCloudTasks(currentEmail, false);
-  }
-});
-window.addEventListener('focus', () => {
-  if (currentEmail && currentEmail !== 'guest@local') {
-    fetchCloudTasks(currentEmail, false);
-  }
-});
-
 function logout(){
-  if (syncPollInterval) {
-    clearInterval(syncPollInterval);
-    syncPollInterval = null;
-  }
-
   try {
     localStorage.removeItem(CURRENT_USER_KEY);
   } catch {}
@@ -2974,6 +3027,11 @@ function logout(){
   if (lastEmail && lastEmail !== 'guest@local') {
     $('emailInput').value = lastEmail;
   } else {
+    $('emailInput').value = '';
+  }
+
+  renderRecentAccounts();
+}
     $('emailInput').value = '';
   }
 
@@ -3683,20 +3741,61 @@ if ($('logoutBtn')) $('logoutBtn').addEventListener('click', logout);
 if ($('headerLogoutBtn')) $('headerLogoutBtn').addEventListener('click', logout);
 if ($('mobileLogoutBtn')) $('mobileLogoutBtn').addEventListener('click', logout);
 
-// Bind Cloud Sync buttons
-const triggerManualSync = () => {
-  if (currentEmail && currentEmail !== 'guest@local') {
-    showToast('Syncing with Cloud...');
-    fetchCloudTasks(currentEmail, false);
+// SIDEBAR TOGGLE ENGINE (2-LINE MENU BUTTON: OPEN / CLOSE)
+function toggleSidebar(){
+  const isMobile = window.innerWidth <= 768;
+  const app = $('app');
+  if (isMobile) {
+    app.classList.toggle('mobile-sidebar-open');
   } else {
-    showToast('Sign in with email to enable cloud sync.');
+    const isClosed = app.classList.toggle('sidebar-closed');
+    try {
+      localStorage.setItem('taskly_sidebar_closed', isClosed ? '1' : '0');
+    } catch {}
   }
-};
-if ($('headerSyncBtn')) $('headerSyncBtn').addEventListener('click', triggerManualSync);
-if ($('mobileSyncBtn')) $('mobileSyncBtn').addEventListener('click', triggerManualSync);
+}
+
+function closeMobileSidebar(){
+  $('app').classList.remove('mobile-sidebar-open');
+}
+
+if ($('menuToggleBtn')) $('menuToggleBtn').addEventListener('click', toggleSidebar);
+if ($('mobileMenuToggleBtn')) $('mobileMenuToggleBtn').addEventListener('click', toggleSidebar);
+if ($('sidebarCloseBtn')) $('sidebarCloseBtn').addEventListener('click', () => {
+  if (window.innerWidth <= 768) {
+    closeMobileSidebar();
+  } else {
+    toggleSidebar();
+  }
+});
+if ($('sidebarBackdrop')) $('sidebarBackdrop').addEventListener('click', closeMobileSidebar);
+
+// Auto-close drawer on mobile when clicking workspace items
+document.querySelectorAll('[data-section]').forEach(b => {
+  b.addEventListener('click', () => {
+    if (window.innerWidth <= 768) closeMobileSidebar();
+  });
+});
+if ($('sidebarRecipeBtn')) {
+  $('sidebarRecipeBtn').addEventListener('click', () => {
+    if (window.innerWidth <= 768) closeMobileSidebar();
+  });
+}
 
 // Bind mobile recipe pill
 if ($('mobileRecipePill')) $('mobileRecipePill').addEventListener('click', () => {
+  navigateTo('recipe');
+});
+
+// Mobile Action Bar Buttons
+if ($('mobileNewTaskBtn')) $('mobileNewTaskBtn').addEventListener('click', () => {
+  const form = $('taskForm');
+  form.hidden = !form.hidden;
+  if (!form.hidden) {
+    $('taskInput').focus();
+  }
+});
+if ($('mobileRecipeBtn')) $('mobileRecipeBtn').addEventListener('click', () => {
   navigateTo('recipe');
 });
 
@@ -3739,11 +3838,15 @@ $('taskForm').addEventListener('submit', e => {
   showToast('New task added!');
 });
 
-// SEARCH & FILTERS
-$('searchInput').addEventListener('input', e => {
+// SEARCH & FILTERS (AT VERY TOP: SYNCHRONIZED ACROSS DESKTOP & MOBILE)
+const handleSearch = e => {
   searchTerm = e.target.value.trim().toLowerCase();
+  if ($('searchInput') && $('searchInput') !== e.target) $('searchInput').value = e.target.value;
+  if ($('mobileSearchInput') && $('mobileSearchInput') !== e.target) $('mobileSearchInput').value = e.target.value;
   render();
-});
+};
+if ($('searchInput')) $('searchInput').addEventListener('input', handleSearch);
+if ($('mobileSearchInput')) $('mobileSearchInput').addEventListener('input', handleSearch);
 
 document.querySelectorAll('[data-filter]').forEach(b => {
   b.addEventListener('click', () => {
@@ -3777,6 +3880,12 @@ $('logoutBtn').addEventListener('click', logout);
 // INITIALIZE APP
 initTheme();
 renderRecentAccounts();
+
+try {
+  if (window.innerWidth > 768 && localStorage.getItem('taskly_sidebar_closed') === '1') {
+    $('app').classList.add('sidebar-closed');
+  }
+} catch {}
 
 try {
   const activeUser = localStorage.getItem(CURRENT_USER_KEY);
