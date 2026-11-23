@@ -1816,6 +1816,19 @@ main{
   border-color:var(--red);
   color:var(--red);
 }
+.header-action-btn.sync-pill-btn{
+  background:var(--purple-light);
+  border-color:rgba(124,58,237,0.25);
+  color:var(--purple);
+}
+.header-action-btn.sync-pill-btn:hover{
+  background:var(--purple);
+  color:#fff;
+}
+.m-action-btn.sync-btn{
+  background:var(--purple-light);
+  color:var(--purple);
+}
 
 /* MOBILE WORKSPACE STRIP */
 .mobile-workspace-strip{
@@ -2040,6 +2053,9 @@ main{
         <span class="brand-icon">✓</span> taskly
       </div>
       <div class="mobile-actions">
+        <button class="m-action-btn sync-btn" id="mobileSyncBtn" type="button" title="Sync now with Cloud">
+          <span class="m-sync-icon" id="mSyncIcon">☁️</span>
+        </button>
         <button class="m-action-btn theme-toggle-btn" id="mobileThemeBtn" type="button" title="Toggle Theme">
           <span class="m-theme-icon">🌙</span> <span class="m-theme-text">Dark</span>
         </button>
@@ -2058,6 +2074,9 @@ main{
           <p class="subtitle" id="dailyMessage">A little progress each day adds up.</p>
         </div>
         <div class="header-right-tools">
+          <button class="header-action-btn sync-pill-btn" id="headerSyncBtn" type="button" title="Real-time Cloud Sync">
+            <span class="h-sync-icon" id="headerSyncIcon">☁️</span> <span class="h-sync-text" id="headerSyncText">Synced</span>
+          </button>
           <div class="header-user-badge">
             <span class="user-avatar-small" id="headerAvatar">U</span>
             <span class="user-email-text" id="headerUserEmail">user@email.com</span>
@@ -2689,51 +2708,124 @@ const SYNC_API_BASE = (typeof window !== 'undefined' && window.location.origin &
 
 let cloudSyncTimeout = null;
 let isSyncingCloud = false;
+let syncPollInterval = null;
+let lastKnownCloudJson = '';
+
+function updateSyncIndicators(state){
+  const status = $('syncStatus');
+  const hText = $('headerSyncText');
+  const hIcon = $('headerSyncIcon');
+  const mIcon = $('mSyncIcon');
+
+  if (state === 'syncing') {
+    if (status) status.textContent = '🔄 Syncing with Cloud...';
+    if (hText) hText.textContent = 'Syncing...';
+    if (hIcon) hIcon.textContent = '🔄';
+    if (mIcon) mIcon.textContent = '🔄';
+  } else if (state === 'saving') {
+    if (status) status.textContent = '☁️ Saving to Cloud...';
+    if (hText) hText.textContent = 'Saving...';
+    if (hIcon) hIcon.textContent = '☁️';
+    if (mIcon) mIcon.textContent = '☁️';
+  } else if (state === 'synced') {
+    if (status) status.textContent = '☁️ Synced across devices';
+    if (hText) hText.textContent = 'Synced';
+    if (hIcon) hIcon.textContent = '✓';
+    if (mIcon) mIcon.textContent = '✓';
+    setTimeout(() => {
+      if (hIcon && hIcon.textContent === '✓') hIcon.textContent = '☁️';
+      if (mIcon && mIcon.textContent === '✓') mIcon.textContent = '☁️';
+    }, 2000);
+  } else if (state === 'offline' || state === 'error') {
+    if (status) status.textContent = '⚠️ Offline (Local backup active)';
+    if (hText) hText.textContent = 'Offline';
+    if (hIcon) hIcon.textContent = '⚠️';
+    if (mIcon) mIcon.textContent = '⚠️';
+  }
+}
 
 async function pushCloudTasks(email, tasksList){
-  if (!email || email === 'guest@local') return;
+  if (!email || email === 'guest@local') return null;
+  updateSyncIndicators('saving');
   try {
     const res = await fetch(`${SYNC_API_BASE}/api/sync`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
+      },
       body: JSON.stringify({ email, tasks: tasksList })
     });
-    return await res.json().catch(() => ({}));
+    const data = await res.json().catch(() => ({}));
+    if (data && data.saved) {
+      lastKnownCloudJson = JSON.stringify(tasksList);
+      updateSyncIndicators('synced');
+    }
+    return data;
   } catch (err) {
-    console.warn('Cloud sync note:', err);
+    console.warn('Cloud sync push note:', err);
+    updateSyncIndicators('error');
     return null;
   }
 }
 
-async function fetchCloudTasks(email){
+async function fetchCloudTasks(email, isSilent = false){
   if (!email || email === 'guest@local' || isSyncingCloud) return;
   isSyncingCloud = true;
-  const status = $('syncStatus');
+  if (!isSilent) updateSyncIndicators('syncing');
+
   try {
-    const res = await fetch(`${SYNC_API_BASE}/api/sync?email=${encodeURIComponent(email)}`, {
-      headers: { 'Accept': 'application/json' }
+    const bust = Date.now();
+    const res = await fetch(`${SYNC_API_BASE}/api/sync?email=${encodeURIComponent(email)}&_t=${bust}`, {
+      headers: { 'Accept': 'application/json' },
+      cache: 'no-store'
     });
     if (!res.ok) throw new Error('Cloud sync request failed');
     const data = await res.json();
+
     if (data && data.ok) {
       if (data.exists && Array.isArray(data.tasks)) {
-        tasks = sanitizeTasks(data.tasks);
-        localStorage.setItem(getKey(email), JSON.stringify(tasks));
-        updateAccountsIndex(email, tasks.length);
-        render();
-        if (status) status.textContent = '☁️ Synced across devices';
+        const cloudTasks = sanitizeTasks(data.tasks);
+        const incomingJson = JSON.stringify(cloudTasks);
+        const currentJson = JSON.stringify(tasks);
+
+        // Only update & re-render if data actually changed
+        if (incomingJson !== currentJson) {
+          lastKnownCloudJson = incomingJson;
+          tasks = cloudTasks;
+          localStorage.setItem(getKey(email), JSON.stringify(tasks));
+          updateAccountsIndex(email, tasks.length);
+
+          // Avoid resetting focus if user is currently typing in an input
+          const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+          const isTyping = activeTag === 'input' || activeTag === 'textarea';
+          if (!isTyping) {
+            render();
+          }
+        }
+        updateSyncIndicators('synced');
       } else if (!data.exists && tasks.length > 0) {
+        // Upload initial tasks to cloud
         await pushCloudTasks(email, tasks);
-        if (status) status.textContent = '☁️ Synced across devices';
       } else {
-        if (status) status.textContent = '☁️ Synced across devices';
+        updateSyncIndicators('synced');
       }
     }
   } catch(e) {
     console.warn('Cloud sync check note:', e);
+    if (!isSilent) updateSyncIndicators('error');
   } finally {
     isSyncingCloud = false;
   }
+}
+
+function startSyncPolling(){
+  if (syncPollInterval) clearInterval(syncPollInterval);
+  syncPollInterval = setInterval(() => {
+    if (currentEmail && currentEmail !== 'guest@local' && !isSyncingCloud) {
+      fetchCloudTasks(currentEmail, true); // true = silent background poll
+    }
+  }, 3000); // Check every 3 seconds for seamless multi-device updates
 }
 
 function save(){
@@ -2745,14 +2837,10 @@ function save(){
 
     if (currentEmail !== 'guest@local') {
       clearTimeout(cloudSyncTimeout);
+      updateSyncIndicators('saving');
       cloudSyncTimeout = setTimeout(() => {
-        pushCloudTasks(currentEmail, tasks).then(res => {
-          const status = $('syncStatus');
-          if (res && res.saved && status) {
-            status.textContent = '☁️ Synced across devices';
-          }
-        });
-      }, 500);
+        pushCloudTasks(currentEmail, tasks);
+      }, 350);
     }
   } catch(e) {
     console.error('Storage error:', e);
@@ -2760,15 +2848,7 @@ function save(){
 }
 
 function showSavedIndicator(){
-  const status = $('syncStatus');
-  if (status) {
-    status.textContent = 'Syncing...';
-    setTimeout(() => {
-      if (status && status.textContent === 'Syncing...') {
-        status.textContent = '☁️ Synced across devices';
-      }
-    }, 1500);
-  }
+  updateSyncIndicators('saving');
 }
 
 function showToast(message){
@@ -2858,23 +2938,29 @@ function enter(email){
 
   // Instant Cloud Sync for cross-device persistence
   if (currentEmail !== 'guest@local') {
-    fetchCloudTasks(currentEmail);
+    fetchCloudTasks(currentEmail, false);
+    startSyncPolling();
   }
 }
 
 // Auto-sync when user wakes device or returns to this tab
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && currentEmail && currentEmail !== 'guest@local') {
-    fetchCloudTasks(currentEmail);
+    fetchCloudTasks(currentEmail, false);
   }
 });
 window.addEventListener('focus', () => {
   if (currentEmail && currentEmail !== 'guest@local') {
-    fetchCloudTasks(currentEmail);
+    fetchCloudTasks(currentEmail, false);
   }
 });
 
 function logout(){
+  if (syncPollInterval) {
+    clearInterval(syncPollInterval);
+    syncPollInterval = null;
+  }
+
   try {
     localStorage.removeItem(CURRENT_USER_KEY);
   } catch {}
@@ -3596,6 +3682,18 @@ if ($('loginThemeBtn')) $('loginThemeBtn').addEventListener('click', toggleTheme
 if ($('logoutBtn')) $('logoutBtn').addEventListener('click', logout);
 if ($('headerLogoutBtn')) $('headerLogoutBtn').addEventListener('click', logout);
 if ($('mobileLogoutBtn')) $('mobileLogoutBtn').addEventListener('click', logout);
+
+// Bind Cloud Sync buttons
+const triggerManualSync = () => {
+  if (currentEmail && currentEmail !== 'guest@local') {
+    showToast('Syncing with Cloud...');
+    fetchCloudTasks(currentEmail, false);
+  } else {
+    showToast('Sign in with email to enable cloud sync.');
+  }
+};
+if ($('headerSyncBtn')) $('headerSyncBtn').addEventListener('click', triggerManualSync);
+if ($('mobileSyncBtn')) $('mobileSyncBtn').addEventListener('click', triggerManualSync);
 
 // Bind mobile recipe pill
 if ($('mobileRecipePill')) $('mobileRecipePill').addEventListener('click', () => {
