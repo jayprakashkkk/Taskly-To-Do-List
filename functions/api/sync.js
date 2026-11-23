@@ -18,6 +18,16 @@ async function runSql(query, params = []) {
   return data.rows || [];
 }
 
+async function ensureTable() {
+  await runSql(`
+    CREATE TABLE IF NOT EXISTS taskly_user_data (
+      email TEXT PRIMARY KEY,
+      tasks_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -40,6 +50,8 @@ export async function onRequest(context) {
   }
 
   try {
+    await ensureTable();
+
     // GET /api/sync?email=...
     if (method === 'GET') {
       const email = String(url.searchParams.get('email') || '').trim().toLowerCase();
